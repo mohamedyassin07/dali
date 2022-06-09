@@ -26,9 +26,11 @@ class Sub_Site_Dashboard
         add_action( 'plugins_loaded', array( $this, 'add_main_dashboard_fields' ) );
         add_action( 'acf/save_post', array( $this, 'save_wp_settings' ) ) ;
         add_action( 'acf/save_post', array( $this, 'save_theme_settings' ) ) ; 
-        add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );       
+        
+        add_filter( 'admin_body_class', array( $this ,  'add_unique_admin_body_class'), 9999999999999 , 1 );   
+
+        
         // add_filter( 'acf/update_value/key=field_628911712e54833', array( $this, 'save_available_widgets_to_json' ), 10, 4 );
-        add_action('admin_head', array( $this, 'add_admin_css' ));
     }
 
     public function save_available_widgets_to_json( $value, $post_id, $field, $original  )
@@ -70,11 +72,8 @@ class Sub_Site_Dashboard
         }
     }
 
-    public function add_main_dashboard_fields()
-    {
-        $dali_admin_css = prr_html( get_field('dali_admin_css', 'option') );
-
-
+    public function add_main_dashboard_fields(){
+        
         $fields = array_merge(
             $this->wordpress_options_tab_fields(),
             $this->theme_options_tab_fields(),
@@ -114,7 +113,7 @@ class Sub_Site_Dashboard
 
     public function wordpress_options_tab_fields()
     {
-        $wp_options = get_alloptions();
+        $wp_options =  wp_load_alloptions();
         $wp_options = prr_html( $wp_options );
 
         return array(
@@ -215,29 +214,29 @@ class Sub_Site_Dashboard
                 'placement' => 'top',
                 'endpoint' => 0,
             ),
-            array(
-                'key' => 'field_6211853728847',
-                'label' => 'General CSS',
-                'name' => 'general_css',
-                'type' => 'textarea',
-                'instructions' => '',
-                'required' => 0,
-                'conditional_logic' => 0,
-                'wrapper' => array(
-                    'width' => '90',
-                    'class' => '',
-                    'id' => '',
-                ),
-                'default_value' => '',
-                'placeholder' => '',
-                'mode' => 'css',
-                'lines' => 1,
-                'indent_unit' => 4,
-                'maxlength' => '',
-                'rows' => 3,
-                'max_rows' => '',
-                'return_entities' => 0,
-            ),
+            // array(
+            //     'key' => 'field_6211853728847',
+            //     'label' => 'General CSS',
+            //     'name' => 'general_css',
+            //     'type' => 'textarea',
+            //     'instructions' => '',
+            //     'required' => 0,
+            //     'conditional_logic' => 0,
+            //     'wrapper' => array(
+            //         'width' => '',
+            //         'class' => '',
+            //         'id' => '',
+            //     ),
+            //     'default_value' => '',
+            //     'placeholder' => '',
+            //     'mode' => 'css',
+            //     'lines' => 1,
+            //     'indent_unit' => 4,
+            //     'maxlength' => '',
+            //     'rows' => 30,
+            //     'max_rows' => '',
+            //     'return_entities' => 0,
+            // ),
             array(
                 'key' => 'field_629c21b092e37',
                 'label' => 'Show Id',
@@ -258,77 +257,73 @@ class Sub_Site_Dashboard
                 'ui_on_text' => '',
                 'ui_off_text' => '',
             ),
-            array(
-                'key' => 'field_629c1eba92e34',
-                'label' => 'Custom Css',
-                'name' => 'custom_css',
-                'type' => 'repeater',
-                'instructions' => '',
-                'required' => 0,
-                'conditional_logic' => 0,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-                'hide_admin' => 0,
-                'collapsed' => '',
-                'min' => 0,
-                'max' => 0,
-                'layout' => 'table',
-                'button_label' => '',
-                'sub_fields' => array(
-                    array(
-                        'key' => 'field_629c216f92e35',
-                        'label' => 'ID',
-                        'name' => 'id',
-                        'type' => 'number',
-                        'instructions' => '',
-                        'required' => 0,
-                        'conditional_logic' => 0,
-                        'wrapper' => array(
-                            'width' => '10',
-                            'class' => '',
-                            'id' => '',
-                        ),
-                        'hide_admin' => 0,
-                        'default_value' => '',
-                        'placeholder' => '',
-                        'prepend' => '',
-                        'append' => '',
-                        'min' => '',
-                        'max' => '',
-                        'step' => '',
-                    ),
-                    array(
-                        'key' => 'field_629c218992e36',
-                        'label' => 'css',
-                        'name' => 'css',
-                        'type' => 'textarea',
-                        'instructions' => '',
-                        'required' => 0,
-                        'conditional_logic' => 0,
-                        'wrapper' => array(
-                            'width' => '90',
-                            'class' => '',
-                            'id' => '',
-                        ),
-                        'default_value' => '',
-                        'placeholder' => '',
-                        'mode' => 'css',
-                        'lines' => 1,
-                        'indent_unit' => 4,
-                        'maxlength' => '',
-                        'rows' => 3,
-                        'max_rows' => '',
-                        'return_entities' => 0,
-        
-
-
-
-                    ),
-                ),
-            ),
+            // array(
+            //     'key' => 'field_629c1eba92e34',
+            //     'label' => 'Custom Css',
+            //     'name' => 'custom_css',
+            //     'type' => 'repeater',
+            //     'instructions' => '',
+            //     'required' => 0,
+            //     'conditional_logic' => 0,
+            //     'wrapper' => array(
+            //         'width' => '',
+            //         'class' => '',
+            //         'id' => '',
+            //     ),
+            //     'hide_admin' => 0,
+            //     'collapsed' => '',
+            //     'min' => 0,
+            //     'max' => 0,
+            //     'layout' => 'table',
+            //     'button_label' => '',
+            //     'sub_fields' => array(
+            //         array(
+            //             'key' => 'field_629c216f92e35',
+            //             'label' => 'ID',
+            //             'name' => 'id',
+            //             'type' => 'number',
+            //             'instructions' => '',
+            //             'required' => 0,
+            //             'conditional_logic' => 0,
+            //             'wrapper' => array(
+            //                 'width' => '10',
+            //                 'class' => '',
+            //                 'id' => '',
+            //             ),
+            //             'hide_admin' => 0,
+            //             'default_value' => '',
+            //             'placeholder' => '',
+            //             'prepend' => '',
+            //             'append' => '',
+            //             'min' => '',
+            //             'max' => '',
+            //             'step' => '',
+            //         ),
+            //         array(
+            //             'key' => 'field_629c218992e36',
+            //             'label' => 'css',
+            //             'name' => 'css',
+            //             'type' => 'textarea',
+            //             'instructions' => '',
+            //             'required' => 0,
+            //             'conditional_logic' => 0,
+            //             'wrapper' => array(
+            //                 'width' => '90',
+            //                 'class' => '',
+            //                 'id' => '',
+            //             ),
+            //             'default_value' => '',
+            //             'placeholder' => '',
+            //             'mode' => 'css',
+            //             'lines' => 1,
+            //             'indent_unit' => 4,
+            //             'maxlength' => '',
+            //             'rows' => 3,
+            //             'max_rows' => '',
+            //             'return_entities' => 0,
+            //         ),
+            //     ),
+            // ),
         );
     }
 
@@ -689,77 +684,17 @@ class Sub_Site_Dashboard
     }
 
 	/**
-	 * Outputs CSS as header links and/or inline header styles
+	 * Add Unique Admin Body Classes
 	 */
-	public function add_admin_css()
-    {
-        if( !isset( $_GET['dali_style'] ) ){
-            echo "<script>alert('it's empty')</script>";
-            return;
-        }
-        
+    public function add_unique_admin_body_class( $classes ){
+        $screen = get_current_screen();
+        $new_class = $screen->id . '-' . ( empty($screen->base) ? 'base' :  $screen->base ) . '-' . ( empty($screen->action) ? 'action' :  $screen->action )  ;
 
-        $custom = get_field( 'custom_css', 'dali_dashboard' );
-        foreach ((array)$custom as $css) {
-            if( isset( $css['id'] ) && $css['id'] == $_GET['dali_style'] ){
-
-                echo "<script>alert('".$_GET['dali_style']."')</script>";
-
-                echo "
-                <style>
-                ".
-                $css['css']
-                .
-                "
-                </style>
-                ";
-                return;
-            }
+        if( get_field( 'show_id' , 'dali_dashboard' ) === true ) {
+            echo "<script>alert('$new_class')</script>";
+            echo " ------------------------> this page css unique calss is "  . $new_class;
         }
 
-
-
-
-        $css = get_option('dali_dashboard_dali_admin_css', true) ;
-
-		if ( $css ) {
-			$css .= "\n";
-		}
-
-
-		if ( $css ) {
-			echo "
-			<style>
-			$css
-			</style>
-			";
-		}
-	}
-    
-    public function add_css( $admin_css , $source_id = null )
-    {
-        if( !is_numeric($source_id) ){
-            return;
-        }
-
-        if( get_field( 'show_id' , 'dali_dashboard' ) == 1 ) {
-            echo "this css id is  "  . $source_id;
-            echo "<script>alert('$source_id')</script>";
-        }
-
-        $admin_css .= ' ' . get_field( 'general_css', 'dali_dashboard' );
-
-        $custom = get_field( 'custom_css', 'dali_dashboard' );
-        foreach ((array)$custom as $css) {
-            if( isset( $css['id'] ) && $css['id'] == $source_id ){
-                $admin_css .= ' ' . $css['css'];
-                echo "sssssssss " .  $admin_css . " sssssssssss " ;
-
-                return $admin_css;
-            }
-        }
-
-        return $admin_css;
+        return $classes.' ' . $new_class;
     }
-    
 }
