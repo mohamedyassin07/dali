@@ -4,7 +4,7 @@
  *
  * @package       DALI
  * @author        Mohamed Yassin
- * @version       1.1.1
+ * @version       1.0.0
  *
  * @wordpress-plugin
  * Plugin Name:   Dali

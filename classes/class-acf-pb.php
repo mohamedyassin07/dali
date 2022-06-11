@@ -13,6 +13,8 @@ if (!defined('ABSPATH')) exit;
  * @since		1.0.0
  */
 
+
+
 class ACF_PB
 {
     public $main_dashboard;
@@ -381,7 +383,7 @@ class ACF_PB
         //update_post_meta( $post_id, '_elementor_template_type', 'wp-page' );
         
         //-- Elementor data in json formate .
-        $elementor_data = [];
+        //$elementor_data = [];
 
 
         
@@ -389,21 +391,21 @@ class ACF_PB
 
         if( !empty( $field_acf_rows ) && is_array( $field_acf_rows ) ) {
 
-        $elemetor_sections = [];   
+        $acf_rows = [];   
 
-        foreach( $field_acf_rows as $row_key=>$section ){
+        foreach( $field_acf_rows as $row_key=>$row ){
 
-            $elemetor_colomns = []; 
+            $acf_colomns = []; 
             
 
-            foreach( $section['columns'] as $colomn_key=>$colomns ){
+            foreach( $row['columns'] as $colomn_key=>$colomns ){
 
-                $elemetor_widgets = []; 
+                $acf_widgets = []; 
                 
                 foreach ( $colomns['elements'] as $widgets_key => $widgets ) {
                     
                     
-                    $elemetor_widgets[$widgets_key] = [
+                    $acf_widgets[$widgets_key] = [
                         'id' => $widgets['id'],
                         'elType' => 'widget',
                         'settings' => [
@@ -416,7 +418,7 @@ class ACF_PB
                     ];
                 }
                 
-                $elemetor_colomns[$colomn_key] = [
+                $acf_colomns[$colomn_key] = [
 
                     'id' => $colomns['columns_id'],
                     'elType' => 'column',
@@ -425,22 +427,22 @@ class ACF_PB
                                 '_inline_size' => $colomns['width'],
                                 'column_sticky_offset' => 50,
                                 'scroll_y' => -80,
-                                'elements' => $elemetor_widgets,
+                                'elements' => $acf_widgets,
                     ],
                     'isInner' => '',
                 ];
 
             }
-            $elemetor_sections[$row_key]= 
+            $acf_rows[$row_key]= 
                 [
-                    'id' => $section['section_id'],
+                    'id' => $row['section_id'],
                     'elType' => 'section',
-                    'elements' => $elemetor_colomns,
+                    'elements' => $acf_colomns,
                 ];
 
         }
 
-        $new_elementor_data = $elemetor_sections;
+        $new_elementor_data = $acf_rows;
 
         $old_elementor_data = get_post_meta( $post_id, '_elementor_data', TRUE );
         $old_elementor_data = json_decode($old_elementor_data , TRUE);
@@ -510,7 +512,7 @@ class ACF_PB
                 foreach ( $colomn_value['elements'] as $widget_key => $widget_value ) {
                     
                  // TODO: find way to cheack if keys exist.
-                 if( $widget_value['elType'] == 'widget' ){ 
+                 
 
                     $widgets[$widget_key] = $this->load_acf_element_widgets( $widget_key, $widget_value );
                    
@@ -529,7 +531,7 @@ class ACF_PB
                         'field_629b9a07fb0da' => [],
                     ];  
                     */                                     
-                  } 
+                  
                 } // End Widgets foreach.
 
                 $colomns[$colomn_key] = [

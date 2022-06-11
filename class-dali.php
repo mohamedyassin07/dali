@@ -93,8 +93,9 @@ if ( ! class_exists( 'Dali' ) ) :
 				self::$instance->includes();
 				self::$instance->add_hooks();
 
-				self::$instance->load_sub_site_dashboard();
-
+				// run required classes
+				new Sub_Site_Dashboard;
+				new ACF_PB;
 
 				/**
 				 * Fire a custom action to allow dependencies
@@ -135,42 +136,12 @@ if ( ! class_exists( 'Dali' ) ) :
 		 */
 		private function add_hooks() {
 			add_action( 'plugins_loaded', array( self::$instance, 'load_textdomain' ) );
-			// add_action( 'plugins_loaded', array( self::$instance, 'load_sub_site_dashboard' ) , 20 );
-
-			if( get_current_blog_id() !== 1){
-				add_action( 'plugins_loaded', array( self::$instance, 'load_acf_pb' ) , 30 );
-				add_action( 'plugin_action_links_' . DALI_PLUGIN_BASE, array( $this, 'add_plugin_action_link' ), 20 );
-				add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_backend_scripts_and_styles' ), 20 );		
-			}
+			add_action( 'plugin_action_links_' . DALI_PLUGIN_BASE, array( $this, 'add_plugin_action_link' ), 20 );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_backend_scripts_and_styles' ), 20 );	
 		}
-
-
-		
 
 
 		/**
-		 * Loads the plugin language files.
-		 *
-		 * @access  public
-		 * @since   1.0.0
-		 * @return  void
-		 */
-		public function load_sub_site_dashboard() {
-			new Sub_Site_Dashboard;
-		}
-
-		/**
-		 * Loads the plugin language files.
-		 *
-		 * @access  public
-		 * @since   1.0.0
-		 * @return  void
-		 */
-		public function load_acf_pb() {
-			new ACF_PB;
-		}
-
-				/**
 		 * Loads the plugin language files.
 		 *
 		 * @access  public
@@ -207,8 +178,8 @@ if ( ! class_exists( 'Dali' ) ) :
 		 * @return	void
 		 */
 		public function enqueue_backend_scripts_and_styles() {
-			wp_enqueue_script( 'dali-backend-script', dali_url ('assets/js/dali-backend.js' ), array(), DALI_VERSION, false );
-			wp_localize_script( 'dali-backend-script', 'dali', array(
+			wp_enqueue_script( 'dali-backend-scripts', DALI_PLUGIN_URL . 'core/includes/assets/js/backend-scripts.js', array(), DALI_VERSION, false );
+			wp_localize_script( 'dali', 'dali', array(
 				'plugin_name'   	=> __( 'dali', 'dali' ),
 			));
 		}
