@@ -53,10 +53,22 @@ class ACF_PB
         return $elements;
     }
 
+    public function sections(){
+
+        $get_sections_fields = acf_get_fields('group_62b030fecf181');
+
+        $sections = isset( $get_sections_fields[0]['sub_fields']) ? $get_sections_fields[0]['sub_fields'] : '';
+        
+        return $sections;
+    }
+
 
     public function add_page_builder_fields_group(){
 
         $elements = $this->elements();
+        $sections = $this->sections();
+        // prr($sections);
+
         
         if( function_exists('acf_add_local_field_group') ):
     
@@ -104,6 +116,22 @@ class ACF_PB
                                 'append' => '',
                                 'maxlength' => '',
                             ),
+                            // array(
+                            //     'key' => 'field_62b03a65baaaa',
+                            //     'label' => 'Section Settings',
+                            //     'name' => 'settings',
+                            //     'type' => 'group',
+                            //     'instructions' => '',
+                            //     'required' => 0,
+                            //     'conditional_logic' => 0,
+                            //     'wrapper' => array(
+                            //         'width' => '',
+                            //         'class' => '',
+                            //         'id' => '',
+                            //     ),
+                            //     'layout' => 'block',
+                            //     'sub_fields' => array($sections),
+                            // ),
                             array(
                                 'key' => 'field_62a0707f4e238',
                                 'label' => 'section id',
@@ -223,7 +251,7 @@ class ACF_PB
                             'class' => '',
                             'id' => '',
                         ),
-                        //'message' => prr_html($elements),
+                        // 'message' => prr_html($sections),
                         'new_lines' => 'wpautop',
                         'esc_html' => 0,
                     ), 
@@ -316,6 +344,8 @@ class ACF_PB
 
     public function get_available_widgets(){}
 
+   
+   
     public function update_elementor_data($post_id){
          
         // only save data if is the page build with elementor .
@@ -335,7 +365,7 @@ class ACF_PB
 
         $acf_data = get_field('field_acf_rows', $post_id);
         
-        // get checkbox names from dashboard .
+        // get checkbox KEY names from dashboard .
         $checkbox_name = get_option('dali_dashboard_acf_check_box', true);
         $checkbox_name_arr = [];
         if( ! empty( $checkbox_name ) ) {
@@ -343,10 +373,6 @@ class ACF_PB
             $checkbox_name_arr = array_map('trim', $checkbox_name_arr);
         }
         
-        
-        // prr($checkbox_name_arr);
-        // die;
-
         if( !empty( $acf_data ) && is_array( $acf_data ) ) {
 
         $rows = [];   
@@ -384,13 +410,9 @@ class ACF_PB
                    }
                 }
                
-
-                // prr( $widget );
-                    
-                // prr($widget_key);
                 if( isset( $widget['image'] ) ){ 
                         $widget['image']['source'] = 'library';                 
-                        // remove extra image keys .
+                        // TODO:: remove extra image keys .
      
                 }
 
@@ -437,39 +459,9 @@ class ACF_PB
                 ];
 
         }
-        // die;
+
         $new_elementor_data = $rows;
 
-
-        // /**
-        //  * get elements deleted ids 
-        //  */
-        // $del_section = get_field('del_section' , $post_id);
-        // $del_column  = get_field('del_column' , $post_id);
-        // $del_widget  = get_field('del_widget' , $post_id);
-
-        // if( !empty( $del_section ) ){
-        //     $del_section = explode (",", $del_section); 
-        // }else{
-        //     $del_section = [];
-        // }
-        // if( !empty( $del_column ) ){
-        //     $del_column = explode (",", $del_column); 
-        // }else{
-        //     $del_column = [];
-        // }
-        // if( !empty( $del_widget ) ){
-        //     $del_widget = explode (",", $del_widget); 
-        // }else{
-        //     $del_widget = [];
-        // }
-        // $ele_to_delete = [
-        //     'section' => array_filter($del_section),
-        //     'column'  => array_filter($del_column),
-        //     'widget'  => array_filter($del_widget),
-        // ];     
-        // prr($ele_to_delete , 'section');
-        // die;
         $elementor_data = get_post_meta( $post_id, '_elementor_data');
         
         if( isset( $elementor_data[0] ) ){
@@ -477,27 +469,39 @@ class ACF_PB
         }else{
             $elementor_data = [];
         }
-        
-        // check for updated data on save [ handle deleted data].
-        $elementor_data = $this->handle_deleted_data( $new_elementor_data, $elementor_data );
 
-        // prr( $elementor_data );
-        // die;
+
+       
+        // get elements deleted ids from post id.  
+        $ele_to_delete = $this->ele_to_delete( $post_id );
+
+        // handel deleted data from elementor data .
+        $elementor_data = $this->handle_deleted_data( $ele_to_delete, $elementor_data );
+
+        // prr($elementor_data); die;
         
+        // check if section pos has changes reindex elementor data [ section_sorting ].
+        $elementor_data = $this->section_sorting( $new_elementor_data, $elementor_data );
+
+
+        
+        // replace old elementor data with acf new data without lose elementor extra key.
         $updated_elementor_data = array_replace_recursive( $elementor_data, $new_elementor_data );
 
-        // prr( $updated_elementor_data );
+
+
+        // prr( $updated_elementor_data  );
         // die();
                 
         //Unhook function to prevent infitnite looping
         remove_action('acf/save_post', array( $this, 'update_elementor_data' ) , 20);
 
-        // Remove Post CSS
+        // add acf field css like [color & font size & ect .....] to postcss-id.css.
 		$post_css = Post_CSS::create( $post_id );
-        //  prr($post_css); die();
+        // Remove Post CSS meta .
 		$post_css->delete();
 
-        Plugin::$instance->frontend->enqueue_font( 'cairo' );
+        // Plugin::$instance->frontend->enqueue_font( 'cairo' );
 
         // We need the `wp_slash` in order to avoid the unslashing during the `update_post_meta`
 		$json_value = wp_slash( wp_json_encode( $updated_elementor_data ) );
@@ -697,6 +701,10 @@ class ACF_PB
                             $url = isset($value['settings'][$field_name]['url']) ? $value['settings'][$field_name]['url'] : '';
                             $link_url = parse_url( $url );
                             $home_url = parse_url(  get_site_url( get_current_blog_id() ) );  // Works for WordPress
+                            $image_id = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
+                            $image_id = wp_get_attachment_image_src( $image_id );
+                            // prr($image_id);
+                       
                             // Decide on target
                             if( empty($link_url['host']) ) {
                                 // Is an internal link
@@ -811,7 +819,9 @@ class ACF_PB
                                                 $link_url = parse_url( $url );
                                                 $home_url = parse_url( $_SERVER['HTTP_HOST'] ); 
                                                 $home_url = parse_url( home_url() );  // Works for WordPress
-                                                // Decide on target
+                                                $image_id = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
+                                                $image_id = wp_get_attachment_image_src( $image_id );
+                                                // prr($image_id);
                                                 if( empty($link_url['host']) ) {
                                                     // Is an internal link
                                                     $image_id = isset($row['image']['id']) ? $row['image']['id'] : '';
@@ -932,31 +942,34 @@ class ACF_PB
      * @param array $data
      * @return array
      */
-    public function get_keys_from_array( $data = array() ){
+    public function ele_to_delete( $post_id = 0 ){
 
-        $ele_section_key = [];
-        $ele_column_key  = [];
-        $ele_widget_key  = [];
-        foreach( $data as $sections_key => $section ){
-            if( isset( $section['id'] ) ){   
-                $ele_section_key[] = $section['id'];
-                if( isset( $section['elements'] ) ){
-                    foreach ( $section['elements'] as $column_key => $column ){
-                        $ele_column_key[] = $column['id'];
-                        if( isset( $column['elements'] ) ){
-                            foreach( $column['elements'] as $widget_key => $widget ){
-                                $ele_widget_key[] = $widget['id'];
-                            }
-                       }
-                    }
-                }
-            }
+        $ele_to_delete = [];
+        $del_section = get_field('del_section' , $post_id);
+        $del_column  = get_field('del_column' , $post_id);
+        $del_widget  = get_field('del_widget' , $post_id);
+
+        if( !empty( $del_section ) ){
+            $del_section = explode (",", $del_section); 
+        }else{
+            $del_section = [];
         }
-        return $ele_ = [
-            'section' => $ele_section_key,
-            'column' => $ele_column_key,
-            'widget' => $ele_widget_key,
-        ];       
+        if( !empty( $del_column ) ){
+            $del_column = explode (",", $del_column); 
+        }else{
+            $del_column = [];
+        }
+        if( !empty( $del_widget ) ){
+            $del_widget = explode (",", $del_widget); 
+        }else{
+            $del_widget = [];
+        }
+       return $ele_to_delete = [
+            'section' => array_filter($del_section),
+            'column'  => array_filter($del_column),
+            'widget'  => array_filter($del_widget),
+        ]; 
+              
     }
     
     /**
@@ -967,42 +980,46 @@ class ACF_PB
      * @return array
      */
     public function handle_deleted_data($ele_to_delete, $elementor_data){
+       
+        // if no key to delete rtuen the same data . 
+       prr( $ele_to_delete );
+        if( empty ( $ele_to_delete ) ){
+            return $elementor_data;
+        }
 
-
-        $ele_data_keys = $this->get_keys_from_array($ele_to_delete);
-        $ele_section_key = array_values($ele_data_keys['section']);
-        $ele_column_key  = array_values($ele_data_keys['column']);
-        $ele_widget_key  = array_values($ele_data_keys['widget']);
+        $ele_section_key = array_values($ele_to_delete['section']);
+        $ele_column_key  = array_values($ele_to_delete['column']);
+        $ele_widget_key  = array_values($ele_to_delete['widget']);
         // prr($ele_widget_key);
         $nested = false;
 
         foreach( $elementor_data as $section_key => $section ){
-            $sec_key = isset($section[$section_key]) ? $section[$section_key] : '';
-            if( !in_array( $section['id'] , $ele_section_key ) ){
+
+            if( in_array( $section['id'] , $ele_section_key ) ){
                 //prr('section => [' . $section['id'] . '] key => [' . $section_key  . '] not in array');
                 unset($elementor_data[$section_key]); 
             } 
             
             if( isset( $section['elements'] ) ){
                 foreach( $section['elements'] as $column_key => $column ){
-                    // prr($column);
-                    if( $column['elType']  != 'column' || $column['elType']  != 'section'){
+
+                    if( $column['elType']  != 'column' || $column['elType']  == 'section'){
                         $nested = true; 
                         break;
                       }
-                    $col_key = isset($column[$column_key]) ? $column[$column_key] : '';
-                    if( !in_array($column['id'], $ele_column_key)  ){
+
+                    if( in_array($column['id'], $ele_column_key)  ){
                        // prr('column => [' . $column['id'] . '] key => [' . $column_key  . '] not in array');
                         unset($elementor_data[$section_key]['elements'][$column_key]);
                     } 
                     if( isset($column['elements'] ) ){
                         foreach( $column['elements'] as $widget_key => $widget ){
-                            if( $widget['elType']  != 'column' || $widget['elType']  != 'section'){
+                            if( $widget['elType']  == 'column' || $widget['elType']  == 'section'){
                                 $nested = true; 
                                 break;
                               }
-                            $col = $column['elements'];
-                            if( !in_array($widget['id'], $ele_widget_key ) ){                      
+
+                            if( in_array($widget['id'], $ele_widget_key ) ){                      
                                 //prr('widget => [' . $widget['id'] . '] key => [' . $widget_key  . '] not in array');
                                 unset($elementor_data[$section_key]['elements'][$column_key]['elements'][$widget_key]); 
                                 // break;  
@@ -1018,12 +1035,6 @@ class ACF_PB
             
         }
 
-        // $_ele_data_keys = $this->get_keys_from_array( $elementor_data );
-        // $_ele_section_key = array_values($_ele_data_keys['section']);
-        // $_ele_column_key  = array_values($_ele_data_keys['column']);
-        // $_ele_widget_key  = array_values($_ele_data_keys['widget']);
-        // prr( $_ele_widget_key );
-
         return $elementor_data;
         
     }
@@ -1034,31 +1045,6 @@ class ACF_PB
 			'groups' => Elementor\Fonts::get_font_groups(),
 			'options' => Elementor\Fonts::get_fonts(),
 		];
-    }
-
-    public function acf_error_admin_notice(){
-        if ( isset( $_GET['dali_update'] ) && $_GET['dali_update'] == 'error' ) {
-       
-        echo '<div class="notice notice-error is-dismissible">
-                <p>Error Save page Error In acf layout</p>
-        </div>';
-        
-       } else { 
-        return;
-       }
-        
-
-    }
-    public function add_error_notice_query_var( $location ) {
-        remove_filter( 'redirect_post_location', [ $this, 'add_error_notice_query_var' ], 99 );
-        remove_query_arg( 'dali_update' );
-        return add_query_arg( array( 'dali_update' => 'error' ), $location );
-    }
-    
-    public function add_update_notice_query_var( $location ) {
-        remove_filter( 'redirect_post_location', [ $this, 'add_update_notice_query_var' ], 99 );
-        remove_query_arg( 'dali_update' );
-        return add_query_arg( array( 'dali_update' => 'success' ), $location );
     }
 
     /**
@@ -1076,4 +1062,22 @@ class ACF_PB
         return $allowed_extensions;
     }
 
+    public function section_sorting($new_data, $data_to_sort){
+
+        $new_records = array();
+        if( !empty( $data_to_sort ) && is_array( $data_to_sort ) ){
+            foreach( $new_data as $id => $pos ) {
+                // prr($pos['id']);
+                foreach( $data_to_sort as $key => $record ) {
+                    // prr( $record[ 'id' ] );
+                    if( $record[ 'id' ] == $pos['id'] ) {
+                        $new_records[] = $record;
+                        break;
+                    }
+                }
+
+            }
+          return $new_records;
+        }
+    }
 }

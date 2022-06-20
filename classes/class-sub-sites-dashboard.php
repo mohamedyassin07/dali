@@ -26,7 +26,9 @@ class Sub_Site_Dashboard
         add_action( 'plugins_loaded', array( $this, 'add_main_dashboard_fields' ) );
         add_action( 'acf/save_post', array( $this, 'save_wp_settings' ) ) ;
         add_action( 'acf/save_post', array( $this, 'save_theme_settings' ) ) ; 
-        add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );   
+        add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );  
+        
+        add_filter( 'admin_body_class', array( $this ,  'add_unique_body_class' ) ,  10 ,  1 );
             
         // add_filter( 'acf/update_value/key=field_628911712e54833', array( $this, 'save_available_widgets_to_json' ), 10, 4 );
     }
@@ -781,6 +783,13 @@ class Sub_Site_Dashboard
         }
 
         return $admin_css;
+    }
+
+    public function add_unique_body_class( $classes )
+    {
+        $screen = get_current_screen();
+        $class = $screen->id . '-' .  ( $screen->base == '' ? 'base' : $screen->base )  . '-' . ( $screen->action == '' ? 'base' : $screen->action );
+        return $classes . ' ' . $class . ' ';
     }
     
 }
