@@ -477,9 +477,7 @@ class ACF_PB
 
         // handel deleted data from elementor data .
         $elementor_data = $this->handle_deleted_data( $ele_to_delete, $elementor_data );
-
-        // prr($elementor_data); die;
-        
+    
         // check if section pos has changes reindex elementor data [ section_sorting ].
         $elementor_data = $this->section_sorting( $new_elementor_data, $elementor_data );
 
