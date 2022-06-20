@@ -26,7 +26,8 @@ class Sub_Site_Dashboard
         add_action( 'plugins_loaded', array( $this, 'add_main_dashboard_fields' ) );
         add_action( 'acf/save_post', array( $this, 'save_wp_settings' ) ) ;
         add_action( 'acf/save_post', array( $this, 'save_theme_settings' ) ) ; 
-        add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );       
+        add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );   
+            
         // add_filter( 'acf/update_value/key=field_628911712e54833', array( $this, 'save_available_widgets_to_json' ), 10, 4 );
     }
 

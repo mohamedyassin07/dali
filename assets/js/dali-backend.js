@@ -22,9 +22,9 @@ jQuery(function() {
 		for (let i = 0; i < $fields.size(); i++) {
 			let $element = jQuery($fields[i]);
 			let field = acf.getField($element);
-			let type = field.get('type');
-			let key = field.get('key');
-			let name = field.get('name');
+			let type  = field.get('type');
+			let key   = field.get('key');
+			let name  = field.get('name');
 			let value = null;
 			if( name === '_id' ){
                 field = acf.getField($element);
@@ -37,19 +37,96 @@ jQuery(function() {
   
        var formatSeed = function (seed, reqWidth) {
         seed = parseInt(seed, 10).toString(16); // to hex str
-
         if (reqWidth < seed.length) {
             // so long we split
             return seed.slice(seed.length - reqWidth);
         }
-
         if (reqWidth > seed.length) {
             // so short we pad
             return Array(1 + (reqWidth - seed.length)).join('0') + seed;
         }
-
         return seed;
         };
-        this.name = formatSeed(parseInt(new Date().getTime() / 1000, 10), 8);
 
 });
+
+jQuery(document).ready(function($) {
+	if (typeof(acf) == 'undefined') {
+	  return;
+	}
+	$('input#acf-field_62a0707f55552').val('');
+	$('input#acf-field_62a0707f44442').val('');
+	$('input#acf-field_62a0707fff442').val('');
+	    let section_ids = [];
+	    let columns_ids = [];
+	    let widget_ids = [];
+	    // add id with delete row in acf .
+		$('body').on('click', '.acf-field-repeater[data-key="field_acf_rows"] a.acf-icon.-minus', function( e ){
+
+			acf.add_action('remove', function( $el ){	       
+
+				if( !$el.prevObject.hasClass( "acf-clone" ) ){ 
+
+			    let section_id = $el.find(".acf-field[data-name='section_id']").find(".acf-input input").val();
+
+					if( typeof(section_id) != 'undefined' ){
+
+					   if (!section_ids.includes(section_id)) {
+							section_ids.push(section_id);
+							$('input#acf-field_62a0707f55552').val(section_ids);
+						} 
+						
+					}		
+
+					console.log(section_ids);
+
+				}	 
+
+			});	
+		
+		});
+	    $('body').on('click', '.acf-field-repeater[data-name="columns"] a.acf-icon.-minus', function( e ){
+
+			acf.add_action('remove', function( $el ){	       
+
+				if( !$el.prevObject.hasClass( "acf-clone" ) ){ 
+
+				let columns_id = $el.find(".acf-field[data-name='columns_id']").find(".acf-input input").val();
+
+						if( typeof(columns_id) != 'undefined' ){
+							if (!columns_ids.includes(columns_id)) {
+									columns_ids.push(columns_id);
+									$('input#acf-field_62a0707f44442').val(columns_ids);
+								}
+							
+						}
+					console.log(columns_ids);
+				}	 
+
+			});	
+		
+		});
+		
+		$('body').on('click', '.acf-field-flexible-content[data-name="elements"] a.acf-icon.-minus', function( e ){
+
+			acf.add_action('remove', function( $el ){	       
+
+				if( !$el.prevObject.hasClass( "acf-clone" ) ){ 
+
+				let widget_id = $el.closest('.layout').find(".acf-field[data-name='_id']").find(".acf-input input").val();
+			
+					if( typeof(widget_id) != 'undefined' ){
+						if (!widget_ids.includes(widget_id)) {
+							widget_ids.push(widget_id);
+						   $('input#acf-field_62a0707fff442').val(widget_ids);
+						}
+						
+					}
+					console.log(widget_id);
+				}	 
+
+			});	
+		
+		});
+		
+  });

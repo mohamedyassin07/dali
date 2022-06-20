@@ -4,13 +4,13 @@
  *
  * @package       DALI
  * @author        Mohamed Yassin
- * @version       1.0.0
+ * @version       1.0.9
  *
  * @wordpress-plugin
  * Plugin Name:   Dali
  * Plugin URI:    https://mydomain.com
  * Description:   Short Description
- * Version:       1.0.0
+ * Version:       1.0.9
  * Author:        Mohamed Yassin
  * Author URI:    https://developeryassin.wordpress.com
  * Text Domain:   dali
