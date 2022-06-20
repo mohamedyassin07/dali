@@ -1,6 +1,7 @@
 <?php
 
 use Elementor\Core\Files\CSS\Post as Post_CSS;
+use Elementor\Plugin;
 
 // Exit if accessed directly.
 if (!defined('ABSPATH')) exit;
@@ -32,6 +33,11 @@ class ACF_PB
         add_action( 'acf/save_post', [ $this, 'update_elementor_data' ] , 20 ) ;
   
         add_filter('acf/load_value/key=field_acf_rows', [ $this, 'acf_pb_load_fields' ], 10, 3);
+
+        add_action('admin_notices', [ $this, 'acf_error_admin_notice' ]);
+
+        add_filter( 'image_sideload_extensions', [ $this, 'dali_image_sideload_extensions_filter'], 10, 2 );
+
 
       
     }
@@ -263,8 +269,17 @@ class ACF_PB
         
 
         $acf_data = get_field('field_acf_rows', $post_id);
-
-        // prr($acf_data);
+        
+        // get checkbox names from dashboard .
+        $checkbox_name = get_option('dali_dashboard_acf_check_box', true);
+        $checkbox_name_arr = [];
+        if( ! empty( $checkbox_name ) ) {
+            $checkbox_name_arr = explode("\n", $checkbox_name);
+            $checkbox_name_arr = array_map('trim', $checkbox_name_arr);
+        }
+        
+        
+        // prr($checkbox_name_arr);
         // die;
 
         if( !empty( $acf_data ) && is_array( $acf_data ) ) {
@@ -280,36 +295,29 @@ class ACF_PB
                 $acf_widgets = []; 
                 
             foreach ( $colomn['elements'] as $widget_key => $widget ) {
-                // prr($widget);
-                if( isset( $widget['font'] ) && is_array( $widget['font'] ) ){
-                    foreach ($widget['font'] as $font_key => $font) {
-                        $key_name = $font['acf_fc_layout'];
-                        $widget[$key_name] = $font;
-                        // unset($widget['font']);
-                    }                  
+               
+               
+                if( $widget['acf_fc_layout'] == 'dali_error_message'){
+                    // Add your query var if the acf layout are not retreive correctly.
+                    add_filter( 'redirect_post_location', array( $this, 'add_error_notice_query_var' ), 99 );
+                    return;
                 }
 
-                if( isset($widget['hide_pagination_control']) ){
-                    if($widget['hide_pagination_control'] == true){
-                        $widget['hide_pagination_control'] = 'yes';
-                    }else{
-                        $widget['hide_pagination_control'] = '';
-                    }
+               // fix for acf checkbox for elementor .
+                if( is_array( $checkbox_name_arr ) && !empty( $checkbox_name_arr ) ){
+                   foreach ($checkbox_name_arr as $key => $value) {
+                       if( isset( $widget[$value] ) && array_key_exists( $value, $widget ) ){
+                           if( $widget[$value] == 1 ){
+                               $widget[$value] = 'yes'; 
+                           } else {
+                               $widget[$value] = ''; 
+                           }
+                       }
+                   }
                 }
-                    if( isset($widget['hide_prev_next_buttons']) ){
-                    if($widget['hide_prev_next_buttons'] == true){
-                        $widget['hide_prev_next_buttons'] = 'yes';
-                    }else{
-                        $widget['hide_prev_next_buttons'] = '';
-                    }
-                }
-                 if(  isset($widget['show_image_overlay']) ){
-                    if($widget['show_image_overlay'] == true){
-                        $widget['show_image_overlay'] = 'yes';
-                    }else{
-                        $widget['show_image_overlay'] = '';
-                    }
-                }
+               
+
+                // prr( $widget );
                     
                 // prr($widget_key);
                 if( isset( $widget['image'] ) ){ 
@@ -338,12 +346,16 @@ class ACF_PB
                         unset( $widget['image']['height'] );       
                 }
 
-                //  prr($widget); 
+                    if( $widget['acf_fc_layout'] == 'dali_warning_message'){
+                        $_widgetType = $widget['widgettype'];
+                    }else{
+                        $_widgetType = $widget['acf_fc_layout'];
+                    }
                     
                     $acf_widgets[$widget_key] = [
                         'id' => empty( $widget['_id'] ) ? $this->_generate_random_string() : $widget['_id'],
                         'elType' => 'widget',
-                        'widgetType' => $widget['acf_fc_layout'],
+                        'widgetType' => $_widgetType,
                         'settings' => $widget,                    
                     ];
                     
@@ -376,7 +388,7 @@ class ACF_PB
                 ];
 
         }
-
+        // die;
         $new_elementor_data = $rows;
 
         $elementor_data = get_post_meta( $post_id, '_elementor_data');
@@ -403,6 +415,8 @@ class ACF_PB
         //  prr($post_css); die();
 		$post_css->delete();
 
+        Plugin::$instance->frontend->enqueue_font( 'cairo' );
+
         // We need the `wp_slash` in order to avoid the unslashing during the `update_post_meta`
 		$json_value = wp_slash( wp_json_encode( $updated_elementor_data ) );
 		update_post_meta( $post_id, '_elementor_data', $json_value );
@@ -422,7 +436,7 @@ class ACF_PB
         update_post_meta( $post_id, '_elementor_template_type', 'wp-page' );
         //die;
 
-
+        add_filter( 'redirect_post_location', array( $this, 'add_update_notice_query_var' ), 99 );
         //Rehook function to prevent infitnite looping
         add_filter('acf/save_post', array( $this, 'update_elementor_data' ), 20);
 
@@ -575,7 +589,32 @@ class ACF_PB
                       switch ( $field_type ) {
 
                         case 'image':
-                            $widget[$field_key] = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
+                            // Parse home URL and parameter URL
+                            $url = isset($value['settings'][$field_name]['url']) ? $value['settings'][$field_name]['url'] : '';
+                            $link_url = parse_url( $url );
+                            $home_url = parse_url( $_SERVER['HTTP_HOST'] ); 
+                            $home_url = parse_url( home_url() );  // Works for WordPress
+                            // Decide on target
+                            if( empty($link_url['host']) ) {
+                                // Is an internal link
+                                $image_id = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
+                            } elseif( $link_url['host'] == $home_url['host'] ) {
+                                // Is an internal link
+                                $image_id = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
+                            } else {
+                                // Is an external link
+                                $url     = isset($value['settings'][$field_name]['url']) ? $value['settings'][$field_name]['url'] : '';
+                                if( empty( $url ) ){
+                                    $image_id = '';
+                                }else{
+                                    $post_id = get_the_ID();  
+                                    $image_id = media_sideload_image( $url, $post_id, null, 'id' );
+                                }
+                                
+                            }   
+                            
+                           
+                            $widget[$field_key] = $image_id;
                         break;
 
 
@@ -635,12 +674,14 @@ class ACF_PB
                         case 'repeater':
                             $settings =  isset($value['settings']) ? $value['settings'] : ''; 
                             $widget_sub = [];
+                            
                         $settingsName = isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : '';                   
                         if( isset( $sub_fields_value['sub_fields'] ) && !empty( $sub_fields_value['sub_fields'] ) ) {   
                             foreach ( $sub_fields_value['sub_fields'] as $k => $v ) {
                                 
                                     $key = $v['key']; 
                                     $name = $v['name'];
+                                    $type = $v['type'];
                                     
                                     if( is_array( $settingsName ) ){
                                         foreach( $settingsName as $i => $row  ){  
@@ -655,9 +696,56 @@ class ACF_PB
                                                 $widget_sub[$i][$key] = $widget_sub_sub;
                                                         // prr( $widget_sub ); 
                                                 }else
-                                            if( isset( $row['image'] ) && $name == 'image' ) {
-                                                $widget_sub[$i][$key] = isset($row['image']['id']) ? $row['image']['id'] : '';
-                                                // prr( $widget_sub ); 
+                                            if( isset( $row['image'] ) && $type == 'image' ) {
+                                                $url = isset($row['image']['url']) ? $row['image']['url'] : '';
+                                                $link_url = parse_url( $url );
+                                                $home_url = parse_url( $_SERVER['HTTP_HOST'] ); 
+                                                $home_url = parse_url( home_url() );  // Works for WordPress
+                                                // Decide on target
+                                                if( empty($link_url['host']) ) {
+                                                    // Is an internal link
+                                                    $image_id = isset($row['image']['id']) ? $row['image']['id'] : '';
+                                                } elseif( $link_url['host'] == $home_url['host'] ) {
+                                                    // Is an internal link
+                                                    $image_id = isset($row['image']['id']) ? $row['image']['id'] : '';
+                                                } else {
+                                                    // Is an external link
+                                                    $url     = isset($row['image']['url']) ? $row['image']['url'] : '';
+                                                    if( empty( $url ) ){
+                                                        $image_id = '';
+                                                    }else{
+                                                        $post_id = get_the_ID();  
+                                                        $image_id = media_sideload_image( $url, $post_id, null, 'id' );
+                                                    }
+
+                                                }          
+                                                $widget_sub[$i][$key] = $image_id;
+                                                
+                                            }elseif( isset( $row['background_image'] ) && $type == 'image' ){  
+
+                                                $url = isset($row['background_image']['url']) ? $row['background_image']['url'] : '';
+                                                $link_url = parse_url( $url );
+                                                $home_url = parse_url( $_SERVER['HTTP_HOST'] ); 
+                                                $home_url = parse_url( home_url() );  // Works for WordPress
+                                                // Decide on target
+                                                if( empty($link_url['host']) ) {
+                                                    // Is an internal link
+                                                    $image_id = isset($row['background_image']['id']) ? $row['background_image']['id'] : '';
+                                                } elseif( $link_url['host'] == $home_url['host'] ) {
+                                                    // Is an internal link
+                                                    $image_id = isset($row['background_image']['id']) ? $row['background_image']['id'] : '';
+                                                } else {
+                                                    // Is an external link
+                                                    $url     = isset($row['background_image']['url']) ? $row['background_image']['url'] : '';
+                                                    if( empty( $url ) ){
+                                                        $image_id = '';
+                                                    }else{
+                                                        $post_id = get_the_ID();  
+                                                        $image_id = media_sideload_image( $url, $post_id, null, 'id' );
+                                                    }
+
+                                                }          
+                                                $widget_sub[$i][$key] = $image_id;  
                                             }else{
                                                 $widget_sub[$i][$key] = isset($row[$name]) ? $row[$name] : '';
                                             }
@@ -696,13 +784,20 @@ class ACF_PB
         if( empty ( $widget ) ){    
             if( empty ( $widgetType ) ) {
                 $message = 'Nested Layout Not Allowed';
+                $widget = [
+                    'acf_fc_layout' => 'dali_error_message',
+                    'field_62a75313f0cc4' => $message,
+                ]; 
             }else{
                 $message = 'Missing Widget Layout Name :  [ '. $widgetType .' ]';
+                $widget = [
+                    'acf_fc_layout' => 'dali_warning_message',
+                    'field_62acdb900f180' => $message,
+                    'field_62acdbad0f181' => isset( $value['id'] ) ? $value['id'] : '',
+                    'field_62acde27786a1' => $widgetType,
+                ]; 
             }
-            $widget = [
-                'acf_fc_layout' => 'dali_error_message',
-                'field_62a75313f0cc4' => $message,
-            ];  
+             
             // prr( $widget );            
             return $widget;
 
@@ -766,21 +861,21 @@ class ACF_PB
         foreach( $elementor_data as $section_key => $section ){
             $sec_key = isset($section[$section_key]) ? $section[$section_key] : '';
             if( !in_array( $section['id'] , $ele_section_key ) ){
-                prr('section => [' . $section['id'] . '] key => [' . $section_key  . '] not in array');
+                //prr('section => [' . $section['id'] . '] key => [' . $section_key  . '] not in array');
                 unset($elementor_data[$section_key]); 
             } 
             if( isset( $section['elements'] ) ){
                 foreach( $section['elements'] as $column_key => $column ){
                     $col_key = isset($column[$column_key]) ? $column[$column_key] : '';
                     if( !in_array($column['id'], $ele_column_key)  ){
-                        prr('column => [' . $column['id'] . '] key => [' . $column_key  . '] not in array');
+                       // prr('column => [' . $column['id'] . '] key => [' . $column_key  . '] not in array');
                         unset($elementor_data[$section_key]['elements'][$column_key]);
                     } 
                     if( isset($column['elements'] ) ){
                         foreach( $column['elements'] as $widget_key => $widget ){
                             $col = $column['elements'];
                             if( !in_array($widget['id'], $ele_widget_key ) ){                      
-                                prr('widget => [' . $widget['id'] . '] key => [' . $widget_key  . '] not in array');
+                                //prr('widget => [' . $widget['id'] . '] key => [' . $widget_key  . '] not in array');
                                 unset($elementor_data[$section_key]['elements'][$column_key]['elements'][$widget_key]); 
                                 // break;  
                             }
@@ -803,6 +898,54 @@ class ACF_PB
 
         return $elementor_data;
         
+    }
+
+    public function elementor_fonts()
+    {
+        return [
+			'groups' => Elementor\Fonts::get_font_groups(),
+			'options' => Elementor\Fonts::get_fonts(),
+		];
+    }
+
+    public function acf_error_admin_notice(){
+        if ( isset( $_GET['dali_update'] ) && $_GET['dali_update'] == 'error' ) {
+       
+        echo '<div class="notice notice-error is-dismissible">
+                <p>Error Save page Error In acf layout</p>
+        </div>';
+        
+       } else { 
+        return;
+       }
+        
+
+    }
+    public function add_error_notice_query_var( $location ) {
+        remove_filter( 'redirect_post_location', [ $this, 'add_error_notice_query_var' ], 99 );
+        remove_query_arg( 'dali_update' );
+        return add_query_arg( array( 'dali_update' => 'error' ), $location );
+    }
+    
+    public function add_update_notice_query_var( $location ) {
+        remove_filter( 'redirect_post_location', [ $this, 'add_update_notice_query_var' ], 99 );
+        remove_query_arg( 'dali_update' );
+        return add_query_arg( array( 'dali_update' => 'success' ), $location );
+    }
+
+    /**
+     * Function for `image_sideload_extensions` filter-hook.
+     * 
+     * @param string[] $allowed_extensions Array of allowed file extensions.
+     * @param string   $file               The URL of the image to download.
+     *
+     * @return string[]
+     */
+    function dali_image_sideload_extensions_filter( $allowed_extensions, $file ){
+
+        $allowed_extensions = array( 'jpg', 'jpeg', 'jpe', 'png', 'gif', 'webp', 'svg' );
+
+        return $allowed_extensions;
     }
 
 }

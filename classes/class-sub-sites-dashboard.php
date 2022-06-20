@@ -76,7 +76,8 @@ class Sub_Site_Dashboard
             $this->theme_options_tab_fields(),
             $this->frontend_admin_css_tab_fields(),
             $this->get_page_components_tab_fields(),
-            $this->enable_elementor_components_tab_fields()
+            $this->enable_elementor_components_tab_fields(),
+            $this->ckeck_acf_fields_name(),
         );
 
         $fields_group = array(
@@ -622,6 +623,51 @@ class Sub_Site_Dashboard
         
 
         return $subs;
+    }
+
+    public function ckeck_acf_fields_name()
+    {
+        return array(
+            array(
+                'key' => 'field_623c9b39f1111',
+                'label' => 'Acf Checkbox',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
+            array(
+                'key' => 'field_6211853711111',
+                'label' => 'acf PageBuilder Checkbox field name.',
+                'name' => 'acf_check_box',
+                'type' => 'textarea',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'default_value' => '',
+                'placeholder' => '',
+                'mode' => 'css',
+                'lines' => 1,
+                'indent_unit' => 4,
+                'maxlength' => '',
+                'rows' => 30,
+                'max_rows' => '',
+                'return_entities' => 0,
+            ),
+        );
     }
 
     public function save_wp_settings( $post_id )
