@@ -178,7 +178,7 @@ if ( ! class_exists( 'Dali' ) ) :
 		 * @return	void
 		 */
 		public function enqueue_backend_scripts_and_styles() {
-			wp_enqueue_script( 'dali-backend-scripts', DALI_PLUGIN_URL . 'core/includes/assets/js/backend-scripts.js', array(), DALI_VERSION, false );
+			wp_enqueue_script( 'dali-backend-scripts', DALI_PLUGIN_URL . 'assets/js/dali-backend.js', array(), DALI_VERSION, false );
 			wp_localize_script( 'dali', 'dali', array(
 				'plugin_name'   	=> __( 'dali', 'dali' ),
 			));

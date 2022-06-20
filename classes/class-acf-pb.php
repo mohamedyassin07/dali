@@ -1,4 +1,7 @@
 <?php
+
+use Elementor\Core\Files\CSS\Post as Post_CSS;
+
 // Exit if accessed directly.
 if (!defined('ABSPATH')) exit;
 
@@ -23,14 +26,12 @@ class ACF_PB
        
 
        // acf hook add pb fields .
-        add_action('acf/init', array($this, 'add_page_builder_fields_group') );
+        add_action('acf/init', [ $this, 'add_page_builder_fields_group' ] );
        
         // update elementor with acf save hook 20 after save fields .
-        add_action( 'acf/save_post', array( $this, 'update_elementor_data' ) , 20 ) ;
+        add_action( 'acf/save_post', [ $this, 'update_elementor_data' ] , 20 ) ;
   
-        //add_filter('acf/load_field/key=field_acf_rows', [ $this, 'acf_pb_load_fields' ]);
-        add_filter('acf/load_value/key=field_acf_rows', array($this, 'acf_pb_load_fields' ), 10, 3);
-
+        add_filter('acf/load_value/key=field_acf_rows', [ $this, 'acf_pb_load_fields' ], 10, 3);
 
       
     }
@@ -287,8 +288,32 @@ class ACF_PB
                         // unset($widget['font']);
                     }                  
                 }
-                if( isset( $widget['image'] ) && is_array( $widget['image'] ) ){   
+
+                if( isset($widget['hide_pagination_control']) ){
+                    if($widget['hide_pagination_control'] == true){
+                        $widget['hide_pagination_control'] = 'yes';
+                    }else{
+                        $widget['hide_pagination_control'] = '';
+                    }
+                }
+                    if( isset($widget['hide_prev_next_buttons']) ){
+                    if($widget['hide_prev_next_buttons'] == true){
+                        $widget['hide_prev_next_buttons'] = 'yes';
+                    }else{
+                        $widget['hide_prev_next_buttons'] = '';
+                    }
+                }
+                 if(  isset($widget['show_image_overlay']) ){
+                    if($widget['show_image_overlay'] == true){
+                        $widget['show_image_overlay'] = 'yes';
+                    }else{
+                        $widget['show_image_overlay'] = '';
+                    }
+                }
                     
+                // prr($widget_key);
+                if( isset( $widget['image'] ) ){ 
+                        $widget['image']['source'] = 'library';                 
                         // remove extra image keys .
                         unset( $widget['image']['title'] );
                         unset( $widget['image']['sizes'] );
@@ -310,19 +335,13 @@ class ACF_PB
                         unset( $widget['image']['subtype'] );
                         unset( $widget['image']['icon'] );
                         unset( $widget['image']['width'] );
-                        unset( $widget['image']['height'] );
-                        
-                        //add source key to image array for elementor .
-                        $widget['image']['source'] = 'library';
-
-                        $widget['image'];
-                                     
+                        unset( $widget['image']['height'] );       
                 }
 
-
+                //  prr($widget); 
                     
                     $acf_widgets[$widget_key] = [
-                        'id' => empty( $widget['id'] ) ? $this->_generate_random_string() : $widget['id'],
+                        'id' => empty( $widget['_id'] ) ? $this->_generate_random_string() : $widget['_id'],
                         'elType' => 'widget',
                         'widgetType' => $widget['acf_fc_layout'],
                         'settings' => $widget,                    
@@ -330,6 +349,7 @@ class ACF_PB
                     
                     // $acf_widgets[$widget_key] = $this->generate_elementor_widget( $widget_key, $widget );
                 }
+                // prr($widget); 
 
                 //  prr($acf_widgets);
 
@@ -337,11 +357,10 @@ class ACF_PB
                     'id' => empty( $colomn['columns_id'] ) ? $this->_generate_random_string() : $colomn['columns_id'],
                     'elType' => 'column',
                     'settings' => [
-                                '_column_size' => $colomn['width'],
-                                '_inline_size' => $colomn['width'],
-                                'column_sticky_offset' => 50,
-                                'scroll_y' => -80,
-                                
+                        '_column_size' => $colomn['width'],
+                        '_inline_size' => $colomn['width'],
+                        'column_sticky_offset' => 50,
+                        'scroll_y' => -80,                               
                     ],
                     'elements' => $acf_widgets,
                 ];
@@ -351,6 +370,7 @@ class ACF_PB
             $rows[$row_key]= 
                 [
                     'id' => empty( $row['section_id'] ) ? $this->_generate_random_string() : $row['section_id'],
+                    'name' => empty( $row['name'] ) ? 'section-'. $this->_generate_random_string() : $row['name'],
                     'elType' => 'section',
                     'elements' => $colomns,
                 ];
@@ -367,32 +387,25 @@ class ACF_PB
             $elementor_data = [];
         }
         
-        $updated_elementor_data = array_replace_recursive( $elementor_data, $new_elementor_data );
-        
+        // check for updated data on save [ handle deleted data].
+        $elementor_data = $this->handle_deleted_data($new_elementor_data, $elementor_data);
 
-        // prr( $new_elementor_data, 'new data');
-        // prr( $updated_elementor_data, 'updated');
+        // prr( $elementor_data );
         // die();
-        // prr( $old_elementor_data , 'old');
         
-
-        
-        
-        // $updated_elementor_data = array_merge_recursive( $old_elementor_data, $old_elementor_data );
-             
-        // We need the `wp_slash` in order to avoid the unslashing during the `update_post_meta`
-		$json_value = wp_slash( wp_json_encode( $updated_elementor_data ) );
-        $elementor_data = wp_slash( wp_json_encode( $elementor_data ) );
-
-
+        $updated_elementor_data = array_replace_recursive( $elementor_data, $new_elementor_data );
+                
         //Unhook function to prevent infitnite looping
         remove_action('acf/save_post', array( $this, 'update_elementor_data' ) , 20);
 
-        //update_post_meta(  $post_id, '_elementor_data',  $json_value  );
-		// Don't use `update_post_meta` that can't handle `revision` post type
-		update_post_meta( $post_id, '_elementor_data', $json_value );
+        // Remove Post CSS
+		$post_css = Post_CSS::create( $post_id );
+        //  prr($post_css); die();
+		$post_css->delete();
 
-        
+        // We need the `wp_slash` in order to avoid the unslashing during the `update_post_meta`
+		$json_value = wp_slash( wp_json_encode( $updated_elementor_data ) );
+		update_post_meta( $post_id, '_elementor_data', $json_value );
 
         //-- if FREE version of Elementor plugin is installed
         if( defined( 'ELEMENTOR_VERSION' ) ){
@@ -402,9 +415,6 @@ class ACF_PB
         if( defined( 'ELEMENTOR_PRO_VERSION' ) ){
             update_post_meta( $post_id, '_elementor_pro_version', ELEMENTOR_PRO_VERSION );
         }
-
-        // prr( $document );
-        // die;
 
         //-- for Elementor
         update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
@@ -424,10 +434,7 @@ class ACF_PB
         return dechex( rand() );
     }
 
-    public function generate_elementor_widget( $widget_key, $widget ){
-
-        
-    }
+    public function generate_elementor_widget( $widget_key, $widget ){}
     
 
     /**
@@ -506,7 +513,7 @@ class ACF_PB
             } // End Colomn foreach .
 
             $sections[$section_key] = [
-                'field_628c017bd5152' => 'section-'.$section_key,
+                'field_628c017bd5152' => isset( $section_value['name'] ) ? $section_value['name'] : 'section-'.$section_key,
                 'field_62a0707f4e238' => $section_value['id'],
                 'field_624defb6a0589' => $colomns,
             ];
@@ -560,24 +567,23 @@ class ACF_PB
                     $field_name = $sub_fields_value['name'];
                     $field_key  = $sub_fields_value['key'];
                     $field_type = $sub_fields_value['type'];
-                     
-					// if ( $active && $active !== $layout['name'] ) {
-					// 	continue;
-					// }    
-                      // fixed acf Field types.
+                    
+                    
+                    
+                    
+
                       switch ( $field_type ) {
 
                         case 'image':
                             $widget[$field_key] = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
-                            // prr( $widget );  
-                            break;
+                        break;
 
 
                         case 'flexible_content':
 
-                            // prr($sub_fields_value);
-                            $flexible_content =  isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : '';                          
-                            $widget_sub = [];
+                        // prr($sub_fields_value);
+                        $flexible_content =  isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : '';                          
+                        $widget_sub = [];
                         if( !empty( $flexible_content ) && is_array( $flexible_content ) ){ 
                             // prr($flexible_content);
                             foreach ($flexible_content as $flexkey => $flex) {                
@@ -598,25 +604,22 @@ class ACF_PB
                             }
                             $widget[$field_key] = $layout; 
                             // prr( $widget );
-                        }
-                            
-                            break;
+                        }      
+                        break;
 
 
                         case 'group':
-
                         $settings =  isset($value['settings']) ? $value['settings'] : '';  
-                        $settingsName = isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : '';                   
+                        $elementor_settingsName = isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : '';                   
                             //   prr($group);
                         $widget_sub = [];  
                         if( isset( $sub_fields_value['sub_fields'] ) && !empty( $sub_fields_value['sub_fields'] ) ) {   
-                            foreach ( $sub_fields_value['sub_fields'] as $k => $v ) {   
+                            foreach ( $sub_fields_value['sub_fields'] as $k => $v ) { 
+                                
                                 $key = $v['key'];
                                 $name = $v['name'];                
-                                if( is_array( $settingsName ) ){
-                                    
-                                    $widget_sub[$key] = isset($value['settings'][$field_name][$name]) ? $value['settings'][$field_name][$name] : ''; 
-                                                                             
+                                if( is_array( $elementor_settingsName ) ){
+                                    $widget_sub[$key] = isset($value['settings'][$field_name][$name]) ? $value['settings'][$field_name][$name] : '';                                       
                                 }else{
                                     $widget_sub[$key] = isset($settings[$name]) ? $settings[$name] : ''; 
                                 } 
@@ -635,11 +638,23 @@ class ACF_PB
                         $settingsName = isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : '';                   
                         if( isset( $sub_fields_value['sub_fields'] ) && !empty( $sub_fields_value['sub_fields'] ) ) {   
                             foreach ( $sub_fields_value['sub_fields'] as $k => $v ) {
+                                
                                     $key = $v['key']; 
                                     $name = $v['name'];
                                     
                                     if( is_array( $settingsName ) ){
                                         foreach( $settingsName as $i => $row  ){  
+                                            $widget_sub_sub = [];
+                                                if( $v['type'] === 'group' ){
+                                                    foreach( $v['sub_fields'] as $subfield_key => $subfield ){
+                                                        $subf_key  = $subfield['key'];
+                                                        $subf_name = $subfield['name'];
+                                                        $widget_sub_sub[$subf_key]= isset($row[$name][$subf_name]) ? $row[$name][$subf_name] : '';
+                                                        
+                                                        } 
+                                                $widget_sub[$i][$key] = $widget_sub_sub;
+                                                        // prr( $widget_sub ); 
+                                                }else
                                             if( isset( $row['image'] ) && $name == 'image' ) {
                                                 $widget_sub[$i][$key] = isset($row['image']['id']) ? $row['image']['id'] : '';
                                                 // prr( $widget_sub ); 
@@ -664,9 +679,10 @@ class ACF_PB
                       } // End switch ( $field_type ).
                       
                       // update hidden id in acf field for widget .
-                      if( $field_name === 'id' ){
-                        $widget[$field_key] = isset($value['id']) ? $value['id'] : '';
-                      }  
+                      if( $field_name === '_id'){
+                        $widget[$field_key] = isset( $value['id'] ) ? $value['id'] : '';
+                     //    prr( $widget );
+                     } 
 
                     } // End Sub fields foreach. 
 
@@ -697,4 +713,96 @@ class ACF_PB
          } 
          
     }  
+    
+    /**
+     * get_keys_from_array function
+     *
+     * @param array $data
+     * @return array
+     */
+    public function get_keys_from_array( $data = array() ){
+
+        $ele_section_key = [];
+        $ele_column_key  = [];
+        $ele_widget_key  = [];
+        foreach( ( array )$data as $sections_key => $section ){
+            if( isset( $section['id'] ) ){   
+                $ele_section_key[] = $section['id'];
+                if( isset( $section['elements'] ) ){
+                    foreach ( $section['elements'] as $column_key => $column ){
+                        $ele_column_key[] = $column['id'];
+                        if( isset( $column['elements'] ) ){
+                            foreach( $column['elements'] as $widget_key => $widget ){
+                                $ele_widget_key[] = $widget['id'];
+                            }
+                       }
+                    }
+                }
+            }
+        }
+        return $ele_ = [
+            'section' => $ele_section_key,
+            'column' => $ele_column_key,
+            'widget' => $ele_widget_key,
+        ];       
+    }
+    
+    /**
+     * handle_deleted_data function
+     *
+     * @param [type] $new_elementor_data
+     * @param [type] $elementor_data
+     * @return array
+     */
+    public function handle_deleted_data($new_elementor_data, $elementor_data){
+
+
+        $ele_data_keys = $this->get_keys_from_array( $new_elementor_data );
+        $ele_section_key = array_values($ele_data_keys['section']);
+        $ele_column_key  = array_values($ele_data_keys['column']);
+        $ele_widget_key  = array_values($ele_data_keys['widget']);
+        // prr($ele_widget_key);
+        
+        foreach( $elementor_data as $section_key => $section ){
+            $sec_key = isset($section[$section_key]) ? $section[$section_key] : '';
+            if( !in_array( $section['id'] , $ele_section_key ) ){
+                prr('section => [' . $section['id'] . '] key => [' . $section_key  . '] not in array');
+                unset($elementor_data[$section_key]); 
+            } 
+            if( isset( $section['elements'] ) ){
+                foreach( $section['elements'] as $column_key => $column ){
+                    $col_key = isset($column[$column_key]) ? $column[$column_key] : '';
+                    if( !in_array($column['id'], $ele_column_key)  ){
+                        prr('column => [' . $column['id'] . '] key => [' . $column_key  . '] not in array');
+                        unset($elementor_data[$section_key]['elements'][$column_key]);
+                    } 
+                    if( isset($column['elements'] ) ){
+                        foreach( $column['elements'] as $widget_key => $widget ){
+                            $col = $column['elements'];
+                            if( !in_array($widget['id'], $ele_widget_key ) ){                      
+                                prr('widget => [' . $widget['id'] . '] key => [' . $widget_key  . '] not in array');
+                                unset($elementor_data[$section_key]['elements'][$column_key]['elements'][$widget_key]); 
+                                // break;  
+                            }
+                            // prr($widget);
+                        }
+                         
+                    }
+                    
+                    // prr($column);  
+                } 
+            }
+            
+        }
+
+        $_ele_data_keys = $this->get_keys_from_array( $elementor_data );
+        $_ele_section_key = array_values($_ele_data_keys['section']);
+        $_ele_column_key  = array_values($_ele_data_keys['column']);
+        $_ele_widget_key  = array_values($_ele_data_keys['widget']);
+        // prr( $_ele_widget_key );
+
+        return $elementor_data;
+        
+    }
+
 }
