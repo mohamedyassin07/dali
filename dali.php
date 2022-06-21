@@ -15,6 +15,8 @@
  * Author URI:    https://developeryassin.wordpress.com
  * Text Domain:   dali
  * Domain Path:   /languages
+ * GitHub Plugin URI: mohamedyassin07/dali
+ * GitHub Plugin URI: https://github.com/mohamedyassin07/dali
  */
 
 // Exit if accessed directly.
