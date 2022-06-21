@@ -17,6 +17,7 @@
  * Domain Path:   /languages
  * GitHub Plugin URI: mohamedyassin07/dali
  * GitHub Plugin URI: https://github.com/mohamedyassin07/dali
+ * Primary Branch:  master
  */
 
 // Exit if accessed directly.
