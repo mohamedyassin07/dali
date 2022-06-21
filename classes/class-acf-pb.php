@@ -364,7 +364,7 @@ class ACF_PB
         
 
         $acf_data = get_field('field_acf_rows', $post_id);
-        
+        // prr($acf_data); die;
         // get checkbox KEY names from dashboard .
         $checkbox_name = get_option('dali_dashboard_acf_check_box', true);
         $checkbox_name_arr = [];
@@ -479,10 +479,8 @@ class ACF_PB
         $elementor_data = $this->handle_deleted_data( $ele_to_delete, $elementor_data );
     
         // check if section pos has changes reindex elementor data [ section_sorting ].
-        $elementor_data = $this->section_sorting( $new_elementor_data, $elementor_data );
+         $elementor_data = $this->section_sorting( $new_elementor_data, $elementor_data );
 
-
-        
         // replace old elementor data with acf new data without lose elementor extra key.
         $updated_elementor_data = array_replace_recursive( $elementor_data, $new_elementor_data );
 
@@ -645,7 +643,19 @@ class ACF_PB
             $value = $sections;
        }
 
-        // prr( $value  );
+        ?>
+        <!-- <style>
+            .acf-flexible-content .layout .acf-fc-layout-handle{
+                border-bottom: #93003c solid 1px !important;
+                color: #fff;
+                background: #93003c !important;
+            }
+            .acf-field.acf-accordion .acf-label.acf-accordion-title {
+                background: #495157 !important;
+                color: #a4afb7 !important;
+            }
+        </style> -->
+        <?php
 
         return $value;
         
@@ -682,7 +692,7 @@ class ACF_PB
                 // prr($widgetType, $element['name']);
                $widget['acf_fc_layout'] = $widgetType ;
 
-               foreach ( $element['sub_fields']  as $sub_fields_key => $sub_fields_value) {
+               foreach ( $element['sub_fields']  as $sub_fields_key => $sub_fields_value ) {
 
                     $field_name = $sub_fields_value['name'];
                     $field_key  = $sub_fields_value['key'];
@@ -883,7 +893,18 @@ class ACF_PB
                         } 
                             // prr( $widget ); 
                         break;    
-                            
+
+                        case 'taxonomy':
+                            $taxonomy = isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : [];
+                            // remove empty or null array.
+                            $taxonomy = array_filter($taxonomy, function($value) { return !is_null($value) && $value !== ''; });
+                            $taxonomy_name = isset($sub_fields_value['taxonomy']) ? $sub_fields_value['taxonomy'] : '' ;
+                            if( empty( $taxonomy ) && !empty( $taxonomy_name ) ){
+                                $taxonomy = $this->get_taxonomys_id( $taxonomy_name );
+                            }                            
+                            $widget[$field_key] = array_values( $taxonomy );
+
+                        break;    
 
                         default:
                             $widget[$field_key] = isset($value['settings'][$field_name]) ? $value['settings'][$field_name] : '';
@@ -980,7 +1001,7 @@ class ACF_PB
     public function handle_deleted_data($ele_to_delete, $elementor_data){
        
         // if no key to delete rtuen the same data . 
-       prr( $ele_to_delete );
+    //    prr( $ele_to_delete );
         if( empty ( $ele_to_delete ) ){
             return $elementor_data;
         }
@@ -1078,4 +1099,18 @@ class ACF_PB
           return $new_records;
         }
     }
-}
+
+    public function get_taxonomys_id($taxonomy = ''){
+        $taxonomies = get_terms( array(
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false
+        ) );
+        $taxonomies_id = [];
+        if ( !empty($taxonomies) ) :
+            foreach( $taxonomies as $category ) {
+                $taxonomies_id[] = $category->term_id ;   
+            }
+        endif;
+        return $taxonomies_id;
+    }
+}//end class
