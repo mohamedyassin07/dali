@@ -364,7 +364,7 @@ class ACF_PB
         
 
         $acf_data = get_field('field_acf_rows', $post_id);
-        // prr($acf_data); die;
+        prr($acf_data); die;
         // get checkbox KEY names from dashboard .
         $checkbox_name = get_option('dali_dashboard_acf_check_box', true);
         $checkbox_name_arr = [];
@@ -644,17 +644,17 @@ class ACF_PB
        }
 
         ?>
-        <!-- <style>
+        <style>
             .acf-flexible-content .layout .acf-fc-layout-handle{
-                border-bottom: #93003c solid 1px !important;
+                border-bottom: var(--wd-primary-color) solid 1px !important;
                 color: #fff;
-                background: #93003c !important;
+                background: var(--wd-primary-color) !important;
             }
             .acf-field.acf-accordion .acf-label.acf-accordion-title {
-                background: #495157 !important;
-                color: #a4afb7 !important;
+                background: #a4afb7 !important;
+                color: #ffffff !important;
             }
-        </style> -->
+        </style>
         <?php
 
         return $value;

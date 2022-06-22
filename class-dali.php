@@ -138,6 +138,17 @@ if ( ! class_exists( 'Dali' ) ) :
 			add_action( 'plugins_loaded', array( self::$instance, 'load_textdomain' ) );
 			add_action( 'plugin_action_links_' . DALI_PLUGIN_BASE, array( $this, 'add_plugin_action_link' ), 20 );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_backend_scripts_and_styles' ), 20 );	
+			add_action( 'acf/include_field_types', array( $this, 'include_field' ) );
+		}
+
+		/**
+		 * Include field.
+		 *
+		 * @since 1.0.0
+		 */
+		public function include_field() {
+			require_once DALI_PLUGIN_DIR . '/fields/class-dali-acf-field-dimensions-v5.php';
+			require_once DALI_PLUGIN_DIR . '/fields/class-dali-acf-field-hidden-v5.php';
 		}
 
 
