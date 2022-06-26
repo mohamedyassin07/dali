@@ -364,7 +364,7 @@ class ACF_PB
         
 
         $acf_data = get_field('field_acf_rows', $post_id);
-        prr($acf_data); die;
+        // prr($acf_data); die;
         // get checkbox KEY names from dashboard .
         $checkbox_name = get_option('dali_dashboard_acf_check_box', true);
         $checkbox_name_arr = [];
@@ -565,9 +565,7 @@ class ACF_PB
             $colomns = [];
             $nested = false;
             foreach ( $section_value['elements'] as $colomn_key => $colomn_value ) {
-              // هنشيك علي مستوي الكولام
-              // check for ele type 
-              // nested === true; break; else -> 
+
               if( $colomn_value['elType']  != 'column' ){
                 $nested = true; 
                 break;
@@ -707,40 +705,7 @@ class ACF_PB
                         case 'image':
                             // Parse home URL and parameter URL
                             $url = isset($value['settings'][$field_name]['url']) ? $value['settings'][$field_name]['url'] : '';
-                            $link_url = parse_url( $url );
-                            $home_url = parse_url(  get_site_url( get_current_blog_id() ) );  // Works for WordPress
-                            $image_id = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
-                            $image_id = wp_get_attachment_image_src( $image_id );
-                            // prr($image_id);
-                       
-                            // Decide on target
-                            if( empty($link_url['host']) ) {
-                                // Is an internal link
-                                $image_id = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
-                            
-                            } elseif( $link_url['host'] == $home_url['host'] ) {
-                                // Is an internal link
-                                $url     = isset($value['settings'][$field_name]['url']) ? $value['settings'][$field_name]['url'] : '';
-                                if( empty( $url ) ){
-                                    $image_id = '';
-                                }else{
-                                    $post_id = get_the_ID();  
-                                    $image_id = media_sideload_image( $url, $post_id, null, 'id' );
-                                }
-                            } else {
-                                // Is an external link
-                                $url     = isset($value['settings'][$field_name]['url']) ? $value['settings'][$field_name]['url'] : '';
-                                if( empty( $url ) ){
-                                    $image_id = '';
-                                }else{
-                                    $post_id = get_the_ID();  
-                                    $image_id = media_sideload_image( $url, $post_id, null, 'id' );
-                                }
-                                
-                            }   
-                            
-                           
-                            $widget[$field_key] = $image_id;
+                            $widget[$field_key] = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
                         break;
 
 
@@ -823,64 +788,13 @@ class ACF_PB
                                                         // prr( $widget_sub ); 
                                                 }else
                                             if( isset( $row['image'] ) && $type == 'image' ) {
-                                                $url = isset($row['image']['url']) ? $row['image']['url'] : '';
-                                                $link_url = parse_url( $url );
-                                                $home_url = parse_url( $_SERVER['HTTP_HOST'] ); 
-                                                $home_url = parse_url( home_url() );  // Works for WordPress
-                                                $image_id = isset($value['settings'][$field_name]['id']) ? $value['settings'][$field_name]['id'] : '';
-                                                $image_id = wp_get_attachment_image_src( $image_id );
-                                                // prr($image_id);
-                                                if( empty($link_url['host']) ) {
-                                                    // Is an internal link
-                                                    $image_id = isset($row['image']['id']) ? $row['image']['id'] : '';
-                                                } elseif( $link_url['host'] == $home_url['host'] ) {
-                                                    // Is an internal link
-                                                    // Is an external link
-                                                    $url     = isset($row['image']['url']) ? $row['image']['url'] : '';
-                                                    if( empty( $url ) ){
-                                                        $image_id = '';
-                                                    }else{
-                                                        $post_id = get_the_ID();  
-                                                        $image_id = media_sideload_image( $url, $post_id, null, 'id' );
-                                                    }
-                                                } else {
-                                                    // Is an external link
-                                                    $url     = isset($row['image']['url']) ? $row['image']['url'] : '';
-                                                    if( empty( $url ) ){
-                                                        $image_id = '';
-                                                    }else{
-                                                        $post_id = get_the_ID();  
-                                                        $image_id = media_sideload_image( $url, $post_id, null, 'id' );
-                                                    }
-
-                                                }          
-                                                $widget_sub[$i][$key] = $image_id;
+                                                $url = isset($row['image']['url']) ? $row['image']['url'] : '';    
+                                                $widget_sub[$i][$key] = isset($row['image']['id']) ? $row['image']['id'] : '';
                                                 
                                             }elseif( isset( $row['background_image'] ) && $type == 'image' ){  
 
-                                                $url = isset($row['background_image']['url']) ? $row['background_image']['url'] : '';
-                                                $link_url = parse_url( $url );
-                                                $home_url = parse_url( $_SERVER['HTTP_HOST'] ); 
-                                                $home_url = parse_url( home_url() );  // Works for WordPress
-                                                // Decide on target
-                                                if( empty($link_url['host']) ) {
-                                                    // Is an internal link
-                                                    $image_id = isset($row['background_image']['id']) ? $row['background_image']['id'] : '';
-                                                } elseif( $link_url['host'] == $home_url['host'] ) {
-                                                    // Is an internal link
-                                                    $image_id = isset($row['background_image']['id']) ? $row['background_image']['id'] : '';
-                                                } else {
-                                                    // Is an external link
-                                                    $url     = isset($row['background_image']['url']) ? $row['background_image']['url'] : '';
-                                                    if( empty( $url ) ){
-                                                        $image_id = '';
-                                                    }else{
-                                                        $post_id = get_the_ID();  
-                                                        $image_id = media_sideload_image( $url, $post_id, null, 'id' );
-                                                    }
-
-                                                }          
-                                                $widget_sub[$i][$key] = $image_id;  
+                                                $url = isset($row['background_image']['url']) ? $row['background_image']['url'] : '';     
+                                                $widget_sub[$i][$key] = isset($row['background_image']['id']) ? $row['background_image']['id'] : '';  
                                             }else{
                                                 $widget_sub[$i][$key] = isset($row[$name]) ? $row[$name] : '';
                                             }

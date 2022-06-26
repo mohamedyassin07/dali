@@ -1,3 +1,15 @@
+html[dir*="rtl"] .dali-dimensions__input:first-child input {
+	border-right: 1px solid #d5dadf;
+	border-radius: 0 3px 3px 0 ;
+}
+html[dir*="rtl"] .dali-dimensions__inputs{
+	margin-left: 15px;
+}
+html[dir*="rtl"] .dali-dimensions .btn--linker.btn--active{
+	border-radius: 3px 0 0 3px;
+}
+
+
 .dali-dimensions a {
 	text-decoration: none;
 }

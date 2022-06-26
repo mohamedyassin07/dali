@@ -15,9 +15,19 @@ if (!defined('ABSPATH')) exit;
  */
 
 class Sub_Site_Dashboard
-{
+{    
+    /**
+     * main_dashboard
+     *
+     * @var mixed
+     */
     public $main_dashboard;
-
+    
+    /**
+     * __construct
+     *
+     * @return void
+     */
     public function __construct()
     {
         $this->main_dashboard = 'dali_subsite_main_dashboard';
@@ -32,13 +42,27 @@ class Sub_Site_Dashboard
             
         // add_filter( 'acf/update_value/key=field_628911712e54833', array( $this, 'save_available_widgets_to_json' ), 10, 4 );
     }
-
+    
+    /**
+     * save_available_widgets_to_json
+     *
+     * @param  mixed $value
+     * @param  mixed $post_id
+     * @param  mixed $field
+     * @param  mixed $original
+     * @return void
+     */
     public function save_available_widgets_to_json( $value, $post_id, $field, $original  )
     {
         //remote_prr($_REQUEST['acf'] );
         return null;
     }
-
+    
+    /**
+     * add_options_pages
+     *
+     * @return void
+     */
     public function add_options_pages()
     {
         if( function_exists('acf_add_options_page') ) {
@@ -71,7 +95,12 @@ class Sub_Site_Dashboard
 
         }
     }
-
+    
+    /**
+     * add_main_dashboard_fields
+     *
+     * @return void
+     */
     public function add_main_dashboard_fields(){
         
         $fields = array_merge(
@@ -81,6 +110,7 @@ class Sub_Site_Dashboard
             $this->get_page_components_tab_fields(),
             $this->enable_elementor_components_tab_fields(),
             $this->ckeck_acf_fields_name(),
+            $this->dali_site_dashboard_page_id(), 
         );
 
         $fields_group = array(
@@ -111,7 +141,12 @@ class Sub_Site_Dashboard
         acf_add_local_field_group( $fields_group );
             
     }
-
+    
+    /**
+     * wordpress_options_tab_fields
+     *
+     * @return void
+     */
     public function wordpress_options_tab_fields()
     {
         $wp_options =  wp_load_alloptions();
@@ -153,7 +188,12 @@ class Sub_Site_Dashboard
             ),
         );
     }
-
+    
+    /**
+     * theme_options_tab_fields
+     *
+     * @return void
+     */
     public function theme_options_tab_fields()
     {
         $theme_options = get_option( 'xts-woodmart-options' );
@@ -331,7 +371,12 @@ class Sub_Site_Dashboard
             ),
         );
     }
-
+    
+    /**
+     * get_page_components_tab_fields
+     *
+     * @return void
+     */
     public function get_page_components_tab_fields()
     {
         $dali_checked_page = get_option( 'dali_dashboard_dali_checked_page' );
@@ -396,7 +441,12 @@ class Sub_Site_Dashboard
             ),
         );
     }
-
+    
+    /**
+     * available_elementor_widgets
+     *
+     * @return void
+     */
     public static function available_elementor_widgets()
     {
         //  we can get the widgets from the previous url but it take too much time 
@@ -404,7 +454,12 @@ class Sub_Site_Dashboard
         $widgets = file_get_contents( dali_path('assets/elementor_widgets.js') );
         return json_decode( $widgets , true );
     }
-
+    
+    /**
+     * enable_elementor_components_tab_fields
+     *
+     * @return void
+     */
     public function enable_elementor_components_tab_fields()
     {
         $subs = $this->elementor_widgets_control_fields();
@@ -447,6 +502,13 @@ class Sub_Site_Dashboard
         return $fields;
     }
 
+    
+    
+    /**
+     * elementor_widgets_control_fields
+     *
+     * @return void
+     */
     public function elementor_widgets_control_fields()
     {
         $data = $this->available_elementor_widgets();
@@ -627,7 +689,12 @@ class Sub_Site_Dashboard
 
         return $subs;
     }
-
+    
+    /**
+     * ckeck_acf_fields_name
+     *
+     * @return void
+     */
     public function ckeck_acf_fields_name()
     {
         return array(
@@ -672,7 +739,63 @@ class Sub_Site_Dashboard
             ),
         );
     }
-
+     
+     /**
+      * dali_site_dashboard_page_id
+      *
+      * @return void
+      */
+     public function dali_site_dashboard_page_id()
+     {
+        
+        return array(
+            array(
+                'key' => 'field_623c9b39f5656',
+                'label' => 'User Dashboard Page',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
+            array(
+                'key' => 'field_62b813a4cd9cc',
+                'label' => 'User Dashboard Page',
+                'name' => 'site_dashboard_page_id',
+                'type' => 'post_object',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'post_type' => array(
+                    0 => 'page',
+                ),
+                'taxonomy' => '',
+                'allow_null' => 0,
+                'multiple' => 0,
+                'return_format' => 'id',
+                'ui' => 1,
+            ),
+        );
+     }    
+     
+    /**
+     * save_wp_settings
+     *
+     * @param  mixed $post_id
+     * @return void
+     */
     public function save_wp_settings( $post_id )
     {
         if( $post_id !== 'dali_wp_settings'){
@@ -688,7 +811,13 @@ class Sub_Site_Dashboard
         
         $_REQUEST['acf'] = [];
     }
-
+    
+    /**
+     * save_theme_settings
+     *
+     * @param  mixed $post_id
+     * @return void
+     */
     public function save_theme_settings( $post_id )
     {
         if( $post_id !== 'dali_theme_settings'){
@@ -722,7 +851,14 @@ class Sub_Site_Dashboard
 
         $_REQUEST['acf'] = [];
     }
-
+    
+    /**
+     * update_theme_option
+     *
+     * @param  mixed $option
+     * @param  mixed $value
+     * @return void
+     */
     public function update_theme_option( $option, $value )
     {
         $options = get_option( 'xts-woodmart-options' );
@@ -734,7 +870,10 @@ class Sub_Site_Dashboard
     }
 
 	/**
-	 * Outputs CSS as header links and/or inline header styles
+	 * add_admin_css
+     * Outputs CSS as header links and/or inline header styles
+	 *
+	 * @return void
 	 */
 	public function add_admin_css()
     {
@@ -765,7 +904,14 @@ class Sub_Site_Dashboard
 			";
 		}
 	}
-    
+        
+    /**
+     * add_css
+     *
+     * @param  mixed $admin_css
+     * @param  mixed $source_id
+     * @return void
+     */
     public function add_css( $admin_css , $source_id = null )
     {
         if( get_field( 'show_id' , 'dali_dashboard' ) == 1 ) {
@@ -784,7 +930,13 @@ class Sub_Site_Dashboard
 
         return $admin_css;
     }
-
+    
+    /**
+     * add_unique_body_class
+     *
+     * @param  mixed $classes
+     * @return void
+     */
     public function add_unique_body_class( $classes )
     {
         $screen = get_current_screen();
