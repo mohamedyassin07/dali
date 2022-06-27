@@ -4,20 +4,17 @@
  *
  * @package       DALI
  * @author        Mohamed Yassin
- * @version       1.1.0
+ * @version       1.2.0
  *
  * @wordpress-plugin
  * Plugin Name:   Dali
  * Plugin URI:    https://mydomain.com
  * Description:   Short Description
- * Version:       1.1.0
+ * Version:       1.2.0
  * Author:        Mohamed Yassin
  * Author URI:    https://developeryassin.wordpress.com
  * Text Domain:   dali
  * Domain Path:   /languages
- * GitHub Plugin URI: mohamedyassin07/dali
- * GitHub Plugin URI: https://github.com/mohamedyassin07/dali
- * Primary Branch:  master
  */
 
 // Exit if accessed directly.
