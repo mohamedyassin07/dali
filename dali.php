@@ -72,3 +72,15 @@ function dali() {
 }
 
 dali();
+
+require dali_path ( 'plugin-update-checker/plugin-update-checker.php' );
+$buildUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	'https://github.com/mohamedyassin07/dali/',
+	__FILE__,
+	'dali'
+);
+
+//Set the branch that contains the stable release.
+$buildUpdateChecker->setBranch('master');
+//Optional: If you're using a private repository, specify the access token like this:
+$buildUpdateChecker->setAuthentication('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');	
