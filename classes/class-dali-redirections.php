@@ -30,12 +30,9 @@ class DALI_Redirections {
      */
     public function __construct(){
 
-        add_filter( 'login_redirect', [ $this, 'dali_login_redirect_page' ], 999, 3 );
+        add_filter( 'login_redirect', [ $this, 'dali_login_redirect_page' ], 5, 3 );
 
 		// add_filter('allowed_redirect_hosts', [ $this, 'allow_safe_redirects_to_dashboard_subsite'] );
-
-        // add_filter('login_url', [ $this, 'filter_login_url' ], 20, 3);
-
     }
     
     /**
@@ -50,15 +47,14 @@ class DALI_Redirections {
 
         global $user;
 
-        // var_dump($this->get_dashboard_page_url()); die;
+        $dashboard_page_url = $this->get_dashboard_page_url($user);
+         
+        // var_dump( $dashboard_page_url ); die;
 
-        if ( isset( $user->roles ) && is_array( $user->roles ) ) {
+        if ( isset( $user->roles ) && is_array( $user->roles ) && $dashboard_page_url != null ) {
 
             if ( in_array( 'administrator', $user->roles ) ) {
-                return $this->get_dashboard_page_url();
-            }
-            if ( in_array( 'subscriber', $user->roles ) ) {
-                return $this->get_dashboard_page_url();
+                return $dashboard_page_url;
             }else {
                 return home_url();
             }
@@ -69,11 +65,11 @@ class DALI_Redirections {
     }
     
     /**
-     * get_dashboard_site_id
+     * site_dashboard_page_id
      *
      * @return void
      */
-    function get_dashboard_site_id() {
+    function get_site_dashboard_page_id() {
         $id = get_field( 'site_dashboard_page_id' , 'dali_dashboard' );
         if ( $id && !empty( $id ) ) {
             return (int) $id;
@@ -88,23 +84,56 @@ class DALI_Redirections {
 	 * @param array $page Page to return the URL.
 	 * @return string
 	 */
-	public function get_dashboard_page_url() {
+	public function get_dashboard_page_url($user) {
 
-		$dashboard_site_id = $this->get_dashboard_site_id();
- 
-		if ( !$dashboard_site_id ) {
+		$user_id = isset( $user->ID ) ? $user->ID : get_current_user_id();
+        $site_id = get_active_blog_for_user( $user_id );
+        
+        $site_id = isset( $site_id->blog_id ) ? $site_id->blog_id : get_current_blog_id();
+        
+        is_multisite() && switch_to_blog($site_id);
 
-			return false;
+        $dashboard_site_id = $this->get_site_dashboard_page_id();
+        
 
-		} // end if;
+        return $this->dali_switch_blog_and_run( $dashboard_site_id );
 
-		return wu_switch_blog_and_run(function() use ( $dashboard_site_id ) {
+        is_multisite() && restore_current_blog();
 
-			return get_the_permalink( $dashboard_site_id );
-
-		});
+        // return $result;		
 
 	} // end get_page_url;
+
+    /**
+     * Tries to switch to a site to run the callback, before returning.
+     *
+     * @since 2.0.0
+     *
+     * @param array|string $callback Callable to run.
+     * @param int          $site_id Site to switch to. Defaults to main site.
+     * @return mixed
+     */
+    function dali_switch_blog_and_run( $dashboard_site_id ) {
+
+        $site_id = get_active_blog_for_user( get_current_user_id(  ) );
+        $site_id = isset( $site_id->blog_id ) ? $site_id->blog_id : get_current_blog_id();
+
+        is_multisite() && switch_to_blog($site_id);
+
+        if ( !empty( $dashboard_site_id ) ) {
+
+            $result = get_the_permalink( $dashboard_site_id );
+
+        }else {
+
+            $result = get_site_url( $site_id );
+        }
+        
+        is_multisite() && restore_current_blog();
+
+        return $result;
+
+    } // end wu_switch_blog_and_run;
 
     /**
      * master_capability
@@ -125,11 +154,13 @@ class DALI_Redirections {
         if (!$user_id) {
             $user_id = get_current_user_id();
         }
-        if (isset($this->master_users['user' . $user_id])) {
-            return $this->master_users['user' . $user_id];
+        
+        if( is_multisite() && user_can( $user_id, $this->master_capability() ) ){
+            return true;
+        }else{
+            return false;
         }
-        $this->master_users['user' . $user_id] = is_multisite() ? user_can($user_id, $this->master_capability()) : $user_id === $this->get_main_admin_id();
-        return $this->master_users['user' . $user_id];
+       
     }
 
         
@@ -140,7 +171,7 @@ class DALI_Redirections {
      * @return void
      */
     function allow_safe_redirects_to_dashboard_subsite($hosts) {
-        $frontend_dashboard_url = $this->get_dashboard_page_url();
+        $frontend_dashboard_url = $this->get_dashboard_page_url($user);
         if (is_multisite() && $frontend_dashboard_url) {
             $dashboard_host = parse_url($frontend_dashboard_url, PHP_URL_HOST);
             if (!in_array($dashboard_host, $hosts, true)) {

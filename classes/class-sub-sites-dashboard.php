@@ -91,6 +91,14 @@ class Sub_Site_Dashboard
                 'post_id'       => 'dali_theme_settings',
                 'parent_slug'   => 'dali_dashboard',
                 'redirect'		=> false
+            )); 
+            acf_add_options_page(array(
+                'menu_title' 	=> __( 'Dali Pages Settings' , 'dali' ),
+                'page_title'	=> __( 'Dali Pages Settings' , 'dali' ),
+                'menu_slug' 	=> 'dali_pages_settings',
+                'post_id'       => 'dali_pages_settings',
+                'parent_slug'   => 'dali_dashboard',
+                'redirect'		=> false
             ));            
 
         }
@@ -111,6 +119,7 @@ class Sub_Site_Dashboard
             $this->enable_elementor_components_tab_fields(),
             $this->ckeck_acf_fields_name(),
             $this->dali_site_dashboard_page_id(), 
+            $this->get_pages_to_edit_ids_tab(), 
         );
 
         $fields_group = array(
@@ -789,6 +798,51 @@ class Sub_Site_Dashboard
             ),
         );
      }    
+
+     public function get_pages_to_edit_ids_tab(){
+
+        return array(
+            array(
+                'key' => 'field_623c9009f5656',
+                'label' => 'Page To edit in dashboard',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
+            array(
+                'key' => 'field_62b81114cd9cc',
+                'label' => 'User Dashboard Page',
+                'name' => 'page_ids',
+                'type' => 'post_object',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'post_type' => array(
+                    0 => 'page',
+                ),
+                'taxonomy' => '',
+                'allow_null' => 0,
+                'multiple' => 1,
+                'return_format' => 'id',
+                'ui' => 1,
+            ),
+        );
+        
+     }
      
     /**
      * save_wp_settings
