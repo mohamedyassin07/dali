@@ -26,8 +26,7 @@ class ACF_PB
      
 
     public function __construct(){
-       
-
+        
        // acf hook add pb fields .
         add_action('acf/init', [ $this, 'add_page_builder_fields_group' ] );
        
@@ -37,11 +36,7 @@ class ACF_PB
         add_filter('acf/load_value/key=field_acf_rows', [ $this, 'acf_pb_load_fields' ], 10, 3);
 
         // add_action('admin_notices', [ $this, 'acf_error_admin_notice' ]);
-
-       add_filter( 'image_sideload_extensions', [ $this, 'dali_image_sideload_extensions_filter'], 10, 2 );
-
-
-      
+    
     }
 
     public function elements(){
@@ -978,21 +973,6 @@ class ACF_PB
 			'groups' => Elementor\Fonts::get_font_groups(),
 			'options' => Elementor\Fonts::get_fonts(),
 		];
-    }
-
-    /**
-     * Function for `image_sideload_extensions` filter-hook.
-     * 
-     * @param string[] $allowed_extensions Array of allowed file extensions.
-     * @param string   $file               The URL of the image to download.
-     *
-     * @return string[]
-     */
-    function dali_image_sideload_extensions_filter( $allowed_extensions, $file ){
-
-        $allowed_extensions = array( 'jpg', 'jpeg', 'jpe', 'png', 'gif', 'webp', 'svg' );
-
-        return $allowed_extensions;
     }
 
     public function section_sorting($new_data, $data_to_sort){

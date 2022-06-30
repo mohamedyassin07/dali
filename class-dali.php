@@ -96,7 +96,7 @@ if ( ! class_exists( 'Dali' ) ) :
 				// run required classes
 				new Sub_Site_Dashboard;
 				new ACF_PB;
-				// new DALI_Redirections;
+				new DALI_Redirections;
 				new ACF_PAGE_CONTENT;
 
 				/**
@@ -127,7 +127,7 @@ if ( ! class_exists( 'Dali' ) ) :
 			require_once DALI_PLUGIN_DIR . 'helpers/basics.php';
 			require_once dali_path ( 'classes/class-sub-sites-dashboard.php' );
 			require_once dali_path ( 'classes/class-acf-pb.php' );
-			// require_once dali_path ( 'classes/class-dali-redirections.php' );
+			require_once dali_path ( 'classes/class-dali-redirections.php' );
 			require_once dali_path ( 'classes/class-acf-page-content.php' );				
 
 		}

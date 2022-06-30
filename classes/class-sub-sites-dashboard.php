@@ -36,7 +36,7 @@ class Sub_Site_Dashboard
         add_action( 'plugins_loaded', array( $this, 'add_main_dashboard_fields' ) );
         add_action( 'acf/save_post', array( $this, 'save_wp_settings' ) ) ;
         add_action( 'acf/save_post', array( $this, 'save_theme_settings' ) ) ; 
-        add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );  
+        // add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );  
         
         add_filter( 'admin_body_class', array( $this ,  'add_unique_body_class' ) ,  10 ,  1 );
             
@@ -93,8 +93,8 @@ class Sub_Site_Dashboard
                 'redirect'		=> false
             )); 
             acf_add_options_page(array(
-                'menu_title' 	=> __( 'Dali Pages Settings' , 'dali' ),
-                'page_title'	=> __( 'Dali Pages Settings' , 'dali' ),
+                'menu_title' 	=> __( 'Dali policies pages' , 'dali' ),
+                'page_title'	=> __( 'Dali policies pages' , 'dali' ),
                 'menu_slug' 	=> 'dali_pages_settings',
                 'post_id'       => 'dali_pages_settings',
                 'parent_slug'   => 'dali_dashboard',
@@ -804,7 +804,7 @@ class Sub_Site_Dashboard
         return array(
             array(
                 'key' => 'field_623c9009f5656',
-                'label' => 'Page To edit in dashboard',
+                'label' => 'policies pages',
                 'name' => '',
                 'type' => 'tab',
                 'instructions' => '',
@@ -820,7 +820,7 @@ class Sub_Site_Dashboard
             ),
             array(
                 'key' => 'field_62b81114cd9cc',
-                'label' => 'User Dashboard Page',
+                'label' => 'policies pages',
                 'name' => 'page_ids',
                 'type' => 'post_object',
                 'instructions' => '',
@@ -877,13 +877,15 @@ class Sub_Site_Dashboard
         if( $post_id !== 'dali_theme_settings'){
             return;
         }
-
+        
         $fields = isset( $_REQUEST['acf'] ) ? $_REQUEST['acf'] : array();
         
         foreach ($fields as $key => $value) {
             $main_field         = get_field_object( $key );
             $main_field_name    = $main_field['name'];
-            
+
+            // prr( $main_field_name , $value ); 
+
             if( is_string( $value ) ){
                 $this->update_theme_option( $main_field_name, $value );
             }elseif ( is_array($value) ) {
@@ -902,7 +904,7 @@ class Sub_Site_Dashboard
 
             }
         }
-
+        // die;
         $_REQUEST['acf'] = [];
     }
     
@@ -915,12 +917,18 @@ class Sub_Site_Dashboard
      */
     public function update_theme_option( $option, $value )
     {
+        $blog_id = get_current_blog_id();
+
+        is_multisite() && switch_to_blog( $blog_id );
+
         $options = get_option( 'xts-woodmart-options' );
 
         if( isset ( $options[$option]) ){
             $options[$option] = $value;
             update_option( 'xts-woodmart-options', $options, true );
         }
+
+        is_multisite() && restore_current_blog();
     }
 
 	/**
@@ -968,8 +976,9 @@ class Sub_Site_Dashboard
      */
     public function add_css( $admin_css , $source_id = null )
     {
-        if( get_field( 'show_id' , 'dali_dashboard' ) == 1 ) {
-            echo "this css id is  "  . $source_id;
+        if( 1 == get_field( 'show_id' , 'dali_dashboard' )  ) {
+            echo "this css id is  "  . $source_id ;
+            echo "<script>alert('$source_id')</script>";
         }
 
         $admin_css .= get_field( 'general_css', 'dali_dashboard' );
@@ -994,8 +1003,13 @@ class Sub_Site_Dashboard
     public function add_unique_body_class( $classes )
     {
         $screen = get_current_screen();
-        $class = $screen->id . '-' .  ( $screen->base == '' ? 'base' : $screen->base )  . '-' . ( $screen->action == '' ? 'base' : $screen->action );
-        return $classes . ' ' . $class . ' ';
+        $new_class = $screen->id . '-' . ( empty($screen->base) ? 'base' :  $screen->base ) . '-' . ( empty($screen->action) ? 'action' :  $screen->action )  ;
+
+        if( get_field( 'show_id' , 'dali_dashboard' ) === true ) {
+            echo "<script>alert('$new_class')</script>";
+            // echo " ------------------------> this page css unique calss is "  . $new_class;
+        }
+        return $classes . ' ' . $new_class . ' ';
     }
     
 }

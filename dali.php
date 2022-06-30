@@ -26,7 +26,7 @@ define( 'DALI_NAME', 'Dali' );
 define( 'DALI_SLUG', 'dali' );
 
 // Plugin version
-define( 'DALI_VERSION',	'1.0.0' );
+define( 'DALI_VERSION',	'1.2.0' );
 
 // Plugin Root File
 define( 'DALI_PLUGIN_FILE',	__FILE__ );
@@ -59,6 +59,7 @@ if ( ! defined('DALI_DEBUG') ) {
  */
 require_once DALI_PLUGIN_DIR . 'class-dali.php';
 
+
 /**
  * The main function to load the only instance
  * of our master class.
@@ -72,15 +73,3 @@ function dali() {
 }
 
 dali();
-
-require dali_path ( 'plugin-update-checker/plugin-update-checker.php' );
-$buildUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
-	'https://github.com/mohamedyassin07/dali/',
-	__FILE__,
-	'dali'
-);
-
-//Set the branch that contains the stable release.
-$buildUpdateChecker->setBranch('master');
-//Optional: If you're using a private repository, specify the access token like this:
-$buildUpdateChecker->setAuthentication('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');	
