@@ -266,4 +266,66 @@ input[type=range] {
   input[type=range]:focus::-ms-fill-upper {
 	background: #d5dadf;
   }
-  
+
+/*acf-image-select  */
+.acf-image-select label{
+    display: inline-block !important;
+	text-align: center;
+}
+.acf-image-select label input {
+    display: none;
+}
+.acf-image-select ul li {
+	width: 22%;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+}
+.acf-image-select label p {
+	font-weight: bold;
+	text-align: center;
+	line-height: 2;
+}
+.acf-image-select a.button{
+	float: none;
+    text-align: center;
+    width: 100%;
+    border-radius: inherit;
+    margin-top: -8px;
+}
+.acf-image-select a.button:hover{
+	background-color: #462757 !important; 
+}
+.acf-image-select label img {
+	border: solid 3px #ddd;
+    border-radius: 4px;
+    position: relative;
+    max-width: 97.4%;
+    vertical-align: middle;
+}
+.acf-image-select label.selected img {
+	border: solid 3px #462757;
+}
+.acf-image-select label.selected div{
+	position: relative;
+}
+.acf-image-select label.selected div:after {
+    content: "\f147";
+    font-family: dashicons;
+    position: absolute;
+    display: block;
+    padding-left: 2px;
+    padding-right: 4px;
+    border-radius: 50%;
+    background-color: #462757;
+    top: -7px;
+    right: -6px;
+    z-index: 15;
+    color: #FFF;
+    text-align: center;
+    line-height: 19px;
+}
+.acf-image-select label.selected a.button {
+	background-color: #462757 !important; 
+}
+

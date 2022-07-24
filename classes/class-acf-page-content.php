@@ -22,9 +22,8 @@ class ACF_PAGE_CONTENT {
      * @return void
      */
     function __construct(){
-
         add_action( 'plugins_loaded', [ $this, 'acf_pages_content_field' ] );
-        add_action( 'acf/save_post', [ $this, 'save_page_content' ] , 20 ) ;
+        add_action( 'acf/save_post', [ $this, 'save_page_content' ] ) ;
     }
     
     /**
@@ -160,9 +159,10 @@ class ACF_PAGE_CONTENT {
     public function save_page_content($post_id){
         
         // only fire save hook on page dali pages settings .
-        if( isset( $_POST['_acf_post_id'] ) &&  $_POST['_acf_post_id'] != 'dali_pages_settings' ){
+        if( isset($_POST['_acf_post_id']) &&  (int) $_POST['_acf_post_id'] != (int) $post_id ) {
             return;
         }
+        
 
         $pages_content_setting = get_field( 'pages_content_setting' , 'dali_pages_settings' );
 

@@ -5,6 +5,36 @@ variable object : dali
 ------------------------*/
 jQuery(function() {
 
+	jQuery(document).on('click', 'tbody#the-list #front_page_actions', function(e) {
+		e.preventDefault();
+
+		let currnt = jQuery(this);
+		let id = currnt.data('id');
+		let title = currnt.closest('td.page-title').find('.row-title').text();
+		alert('تأكيد اختيار صفحة   [ ' +  title +  ' ]   كصفحة  رئيسية ؟');
+
+		jQuery.ajax({
+			url : ajax_wpx.ajax_url,
+			type: 'POST',
+			data:{
+				action: 'dali_front_page', 
+				id: id
+			},
+			beforeSend: function() {},
+            complete: function(){},
+			success: function( response ){				
+				if( response.success === true ) {
+					window.location.reload();
+				}					
+				console.log( response.success );
+			},
+			error: function(xhr, status, error) {
+                var err = eval("(" + xhr.responseText + ")");
+                console.log(err.Message);
+            }
+		});
+	});
+	
 	jQuery(document).on('click', '.acf-fc-layout-controls a.acf-icon[data-name="duplicate-layout"]', function(e) {
 		let $contentBlock = jQuery(this).closest('.layout');
         getContentBlockData($contentBlock);
@@ -128,5 +158,8 @@ jQuery(document).ready(function($) {
 			});	
 		
 		});
+
+
+		
 		
   });

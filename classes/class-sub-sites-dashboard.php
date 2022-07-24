@@ -39,6 +39,11 @@ class Sub_Site_Dashboard
         // add_filter( 'wp_frontend_admin/admin_css', array( $this ,  'add_css'), 10 , 2 );  
         
         add_filter( 'admin_body_class', array( $this ,  'add_unique_body_class' ) ,  10 ,  1 );
+
+        add_filter('acf/load_field/name=default_header', array( $this, 'load_header_field_choices') );
+
+        // Apply to all fields.
+        add_filter('acf/load_value', [ $this, 'load_wd_theme_settings' ], 20, 3);
             
         // add_filter( 'acf/update_value/key=field_628911712e54833', array( $this, 'save_available_widgets_to_json' ), 10, 4 );
     }
@@ -148,6 +153,8 @@ class Sub_Site_Dashboard
 
 
         acf_add_local_field_group( $fields_group );
+      
+        
             
     }
     
@@ -804,7 +811,7 @@ class Sub_Site_Dashboard
         return array(
             array(
                 'key' => 'field_623c9009f5656',
-                'label' => 'policies pages',
+                'label' => 'Site pages',
                 'name' => '',
                 'type' => 'tab',
                 'instructions' => '',
@@ -820,7 +827,7 @@ class Sub_Site_Dashboard
             ),
             array(
                 'key' => 'field_62b81114cd9cc',
-                'label' => 'policies pages',
+                'label' => 'policies Pages',
                 'name' => 'page_ids',
                 'type' => 'post_object',
                 'instructions' => '',
@@ -852,9 +859,10 @@ class Sub_Site_Dashboard
      */
     public function save_wp_settings( $post_id )
     {
-        if( $post_id !== 'dali_wp_settings'){
+        if( isset($_POST['_acf_post_id']) &&  (int) $_POST['_acf_post_id'] != (int) $post_id ) {
             return;
         }
+        
 
         $fields = isset( $_REQUEST['acf'] ) ? $_REQUEST['acf'] : array();
 
@@ -862,8 +870,7 @@ class Sub_Site_Dashboard
             $option = get_field_object( $key )['name'];
             update_option( $option, $value, true );
         }
-        
-        $_REQUEST['acf'] = [];
+         
     }
     
     /**
@@ -874,17 +881,16 @@ class Sub_Site_Dashboard
      */
     public function save_theme_settings( $post_id )
     {
-        if( $post_id !== 'dali_theme_settings'){
+        if( isset($_POST['_acf_post_id']) &&  (int) $_POST['_acf_post_id'] != (int) $post_id ) {
             return;
         }
         
+             
         $fields = isset( $_REQUEST['acf'] ) ? $_REQUEST['acf'] : array();
         
         foreach ($fields as $key => $value) {
             $main_field         = get_field_object( $key );
             $main_field_name    = $main_field['name'];
-
-            // prr( $main_field_name , $value ); 
 
             if( is_string( $value ) ){
                 $this->update_theme_option( $main_field_name, $value );
@@ -904,8 +910,7 @@ class Sub_Site_Dashboard
 
             }
         }
-        // die;
-        $_REQUEST['acf'] = [];
+
     }
     
     /**
@@ -917,18 +922,95 @@ class Sub_Site_Dashboard
      */
     public function update_theme_option( $option, $value )
     {
-        $blog_id = get_current_blog_id();
-
-        is_multisite() && switch_to_blog( $blog_id );
-
         $options = get_option( 'xts-woodmart-options' );
 
         if( isset ( $options[$option]) ){
             $options[$option] = $value;
-            update_option( 'xts-woodmart-options', $options, true );
+            update_option( 'xts-woodmart-options', $options );
+            do_action( 'xts_after_theme_settings' );
         }
+        
+    }
+    
+    /**
+     * load_header_field_choices
+     *
+     * @param  mixed $field
+     * @return void
+     */
+    function load_header_field_choices( $field ) {
+    
+        // reset choices
+        $field['choices'] = [];
+        
+        
+        // get the value & name from woodmart header builder options .
+        $choices = woodmart_get_theme_settings_headers_array();
+        
+        //loop through array and add to field 'choices'
+        if( is_array($choices) && !empty( $choices ) ) {
+            
+            foreach( $choices as $choice ) {
+                $value = $choice['value'];
+                $label = $choice['name'];
+                
+                $field['choices'][ $value ] = $label;
+                
+            }
+            
+        }
+             
+        // return the field
+        return $field;
+        
+    }
+    
+    /**
+     * load_wd_theme_settings
+     *
+     * @param  mixed $value
+     * @param  mixed $post_id
+     * @param  mixed $field
+     * @return void
+     */
+    public function load_wd_theme_settings( $value, $post_id, $field ) {
+        
+        
+        if( $post_id != 'dali_theme_settings' ){
+            return $value;
+        }
+        $options = get_option( 'xts-woodmart-options' );
+        
+        $option = $field['name'];
 
-        is_multisite() && restore_current_blog();
+        if( !empty( $options ) && isset( $options[$option] ) ) {
+           
+            if( is_string( $value ) ) {
+                // fix color for some field 
+                if( isset( $options[$option]['idle'] ) ){
+                    $value = $options[$option]['idle'];
+                }else{
+                    $value = $options[$option];
+                }
+                
+            }elseif ( is_array($value)  ) {
+                
+                foreach ( ( array ) $field['sub_fields'] as $sub_field ) {
+                        $sup_option_name = $sub_field['name'];
+                     if( isset( $options[$option][0] ) ) {
+                        $sup_option[ $sub_field['key'] ] = $options[$option][0][$sup_option_name];  
+                     }else{
+                        $sup_option[ $sub_field['key'] ] = $options[$option][$sup_option_name]; 
+                     }
+                }         
+                
+                $value = $sup_option;
+
+            }   
+        }
+        
+
+        return $value;
     }
 
 	/**

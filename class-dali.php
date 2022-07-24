@@ -98,6 +98,9 @@ if ( ! class_exists( 'Dali' ) ) :
 				new ACF_PB;
 				new DALI_Redirections;
 				new ACF_PAGE_CONTENT;
+				new FrontEndFunctions;
+				new ACF_THEME_SHANGE;
+				new Dali_CustomListPage;
 
 				/**
 				 * Fire a custom action to allow dependencies
@@ -128,8 +131,10 @@ if ( ! class_exists( 'Dali' ) ) :
 			require_once dali_path ( 'classes/class-sub-sites-dashboard.php' );
 			require_once dali_path ( 'classes/class-acf-pb.php' );
 			require_once dali_path ( 'classes/class-dali-redirections.php' );
-			require_once dali_path ( 'classes/class-acf-page-content.php' );				
-
+			require_once dali_path ( 'classes/class-acf-page-content.php' );
+			require_once dali_path ( 'classes/class-frontend-functions.php' );				
+			require_once dali_path ( 'classes/class-acf-theme.php' );
+			require_once dali_path ( 'classes/class-post-list.php' );	
 		}
 
 		/**
@@ -142,7 +147,9 @@ if ( ! class_exists( 'Dali' ) ) :
 		private function add_hooks() {
 			add_action( 'plugins_loaded', array( self::$instance, 'load_textdomain' ) );
 			add_action( 'plugin_action_links_' . DALI_PLUGIN_BASE, array( $this, 'add_plugin_action_link' ), 20 );
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_backend_scripts_and_styles' ), 20 );	
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_backend_scripts_and_styles' ), 20 );
+			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_scripts_and_styles' ), 20 );
+			add_action( 'elementor/editor/before_enqueue_styles', array( $this, 'enqueue_frontend_scripts_and_styles' ), 20 );
 			add_action( 'acf/include_field_types', array( $this, 'include_field' ) );
 		}
 
@@ -194,10 +201,19 @@ if ( ! class_exists( 'Dali' ) ) :
 		 * @return	void
 		 */
 		public function enqueue_backend_scripts_and_styles() {
-			wp_enqueue_script( 'dali-backend-scripts', DALI_PLUGIN_URL . 'assets/js/dali-backend.js', array(), DALI_VERSION, false );
+			wp_enqueue_style( ' add_cairo_font ', 'https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap', false );
+			wp_enqueue_script( 'dali_backend_scripts', DALI_PLUGIN_URL . 'assets/js/dali-backend.js', array(), DALI_VERSION, false );
 			wp_localize_script( 'dali', 'dali', array(
 				'plugin_name'   	=> __( 'dali', 'dali' ),
 			));
+			$dali_object = array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),		
+			);
+			wp_localize_script( 'dali_backend_scripts', 'ajax_wpx', $dali_object );   
+		}
+
+		public function enqueue_frontend_scripts_and_styles(){
+			wp_enqueue_style( 'dali_frontend_style', DALI_PLUGIN_URL . 'assets/css/dali-frontend.css', array(), DALI_VERSION, false );
 		}
 }
 

@@ -31,7 +31,7 @@ class ACF_PB
         add_action('acf/init', [ $this, 'add_page_builder_fields_group' ] );
        
         // update elementor with acf save hook 20 after save fields .
-        add_action( 'acf/save_post', [ $this, 'update_elementor_data' ] , 20 ) ;
+        // add_action( 'acf/save_post', [ $this, 'update_elementor_data' ]) ;
   
         add_filter('acf/load_value/key=field_acf_rows', [ $this, 'acf_pb_load_fields' ], 10, 3);
 
@@ -344,14 +344,12 @@ class ACF_PB
     public function update_elementor_data($post_id){
          
         // only save data if is the page build with elementor .
-        $is_builder = get_post_meta( $post_id, '_elementor_edit_mode', true);
-
-        if( $is_builder != 'builder' ){
+        if( isset($_POST['_acf_post_id']) &&  (int) $_POST['_acf_post_id'] != (int) $post_id ) {
             return;
         }
 
         // prr( $_POST['acf'] );
-        // die;
+        
     
         // remove hook to get new data .
         remove_filter('acf/load_value/key=field_acf_rows', array($this, 'acf_pb_load_fields' ), 10, 3);
@@ -484,9 +482,6 @@ class ACF_PB
         // prr( $updated_elementor_data  );
         // die();
                 
-        //Unhook function to prevent infitnite looping
-        remove_action('acf/save_post', array( $this, 'update_elementor_data' ) , 20);
-
         // add acf field css like [color & font size & ect .....] to postcss-id.css.
 		$post_css = Post_CSS::create( $post_id );
         // Remove Post CSS meta .
@@ -511,11 +506,6 @@ class ACF_PB
         update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
 
         update_post_meta( $post_id, '_elementor_template_type', 'wp-page' );
-        //die;
-
-        // add_filter( 'redirect_post_location', array( $this, 'add_update_notice_query_var' ), 99 );
-        //Rehook function to prevent infitnite looping
-        add_filter('acf/save_post', array( $this, 'update_elementor_data' ), 20);
 
       } // End If is not empty acf row .
 

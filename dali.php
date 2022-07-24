@@ -4,17 +4,20 @@
  *
  * @package       DALI
  * @author        Mohamed Yassin
- * @version       1.2.0
+ * @version       1.4.0
  *
  * @wordpress-plugin
  * Plugin Name:   Dali
- * Plugin URI:    https://mydomain.com
+ * Plugin URI:    https://github.com/mohamedyassin07/dali
  * Description:   Short Description
- * Version:       1.2.0
+ * Version:       1.4.0
  * Author:        Mohamed Yassin
- * Author URI:    https://developeryassin.wordpress.com
+ * Author URI:    https://github.com/mohamedyassin07
  * Text Domain:   dali
  * Domain Path:   /languages
+ * GitHub Plugin URI: mohamedyassin07/dali
+ * GitHub Plugin URI: https://github.com/mohamedyassin07/dali
+ * Primary Branch:  master
  */
 
 // Exit if accessed directly.
@@ -26,7 +29,7 @@ define( 'DALI_NAME', 'Dali' );
 define( 'DALI_SLUG', 'dali' );
 
 // Plugin version
-define( 'DALI_VERSION',	'1.2.0' );
+define( 'DALI_VERSION',	'1.3.0' );
 
 // Plugin Root File
 define( 'DALI_PLUGIN_FILE',	__FILE__ );
@@ -40,6 +43,8 @@ define( 'DALI_PLUGIN_DIR',	plugin_dir_path( DALI_PLUGIN_FILE ) );
 // Plugin Folder URL
 define( 'DALI_PLUGIN_URL',	plugin_dir_url( DALI_PLUGIN_FILE ) );
 
+define('DALI_DEBUG', false);
+
 // Dali debug status
 if ( ! defined('DALI_DEBUG') ) {
 	$dali_settings = get_option( DALI_SLUG );
@@ -49,7 +54,7 @@ if ( ! defined('DALI_DEBUG') ) {
 	){
 		define( 'DALI_DEBUG',	true );
 	}else {
-		define( 'DALI_DEBUG',	true );
+		define( 'DALI_DEBUG',	false );
 	}
 }
 
@@ -58,6 +63,12 @@ if ( ! defined('DALI_DEBUG') ) {
  * Load the main class for the core functionality
  */
 require_once DALI_PLUGIN_DIR . 'class-dali.php';
+
+
+add_action('plugins_loaded', function() {
+	require_once DALI_PLUGIN_DIR . 'woodmart-override-class.php';
+	new WOODMART_Dalisettingscss;
+  }, 10); // default priority is 10, higher number means lower priority
 
 
 /**
